@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useComposeCast } from "@coinbase/onchainkit/minikit"
 
 export interface Video {
   id: string
@@ -60,6 +61,7 @@ export function VideoFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { composeCast } = useComposeCast()
 
   // Fetch videos from API
   useEffect(() => {
@@ -90,18 +92,27 @@ export function VideoFeed() {
     fetchVideos()
   }, [])
 
-  const handleLike = (videoId: string) => {
-    setVideos((prev) =>
-      prev.map((video) =>
-        video.id === videoId
-          ? {
-              ...video,
-              isLiked: !video.isLiked,
-              likes: video.isLiked ? video.likes - 1 : video.likes + 1,
-            }
-          : video,
-      ),
-    )
+  const handleLike = (video: Video) => {
+    // Open Warpcast to like the cast - Minikit doesn't have a native like action yet
+    if (video.castUrl) {
+      window.open(video.castUrl, '_blank');
+    }
+  }
+
+  const handleRecast = (video: Video) => {
+    // Use Minikit's composeCast to quote recast the video
+    composeCast({
+      text: `Check out this video by @${video.username}! #clipchain`,
+      embeds: video.castUrl ? [video.castUrl] : [],
+    })
+  }
+
+  const handleComment = (video: Video) => {
+    // Open Warpcast to comment on the cast
+    // Minikit's composeCast doesn't support parent cast replies yet
+    if (video.castUrl) {
+      window.open(video.castUrl, '_blank');
+    }
   }
 
   const formatCount = (count: number) => {
@@ -183,28 +194,30 @@ export function VideoFeed() {
               {/* Right side - Action buttons */}
               <div className="flex flex-col items-center gap-6">
                 <button
-                  onClick={() => handleLike(video.id)}
+                  onClick={() => handleLike(video)}
                   className="flex flex-col items-center gap-1 transition-transform active:scale-90"
                 >
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                      video.isLiked ? "bg-rose-500" : "bg-white/20 backdrop-blur-sm"
-                    }`}
-                  >
-                    <Heart className={`h-6 w-6 ${video.isLiked ? "fill-white text-white" : "text-white"}`} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
+                    <Heart className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-xs font-semibold text-white">{formatCount(video.likes)}</span>
                 </button>
 
-                <button className="flex flex-col items-center gap-1 transition-transform active:scale-90">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <button
+                  onClick={() => handleComment(video)}
+                  className="flex flex-col items-center gap-1 transition-transform active:scale-90"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
                     <MessageCircle className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-xs font-semibold text-white">{formatCount(video.comments)}</span>
                 </button>
 
-                <button className="flex flex-col items-center gap-1 transition-transform active:scale-90">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <button
+                  onClick={() => handleRecast(video)}
+                  className="flex flex-col items-center gap-1 transition-transform active:scale-90"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
                     <Share2 className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-xs font-semibold text-white">{formatCount(video.shares)}</span>
