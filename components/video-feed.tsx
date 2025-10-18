@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useComposeCast, useViewCast } from "@coinbase/onchainkit/minikit"
+import { useComposeCast } from "@coinbase/onchainkit/minikit"
 
 export interface Video {
   id: string
@@ -62,7 +62,6 @@ export function VideoFeed() {
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { composeCast } = useComposeCast()
-  const { viewCast } = useViewCast()
 
   // Fetch videos from API
   useEffect(() => {
@@ -94,10 +93,12 @@ export function VideoFeed() {
   }, [])
 
   const handleLike = (video: Video) => {
-    // Open cast natively in Farcaster client where user can like
-    if (video.castHash) {
-      viewCast({ hash: video.castHash });
-    }
+    // Minikit doesn't have native like action - best we can do is optimistic UI update
+    // Or open compose to encourage engagement
+    composeCast({
+      text: `Love this! 🔥 @${video.username} #clipchain`,
+      embeds: video.castUrl ? [video.castUrl] : [],
+    })
   }
 
   const handleRecast = (video: Video) => {
@@ -109,10 +110,11 @@ export function VideoFeed() {
   }
 
   const handleComment = (video: Video) => {
-    // Open cast natively in Farcaster client where user can comment
-    if (video.castHash) {
-      viewCast({ hash: video.castHash });
-    }
+    // Use composeCast to create a comment/reply
+    composeCast({
+      text: ``, // Let user write their own comment
+      embeds: video.castUrl ? [video.castUrl] : [],
+    })
   }
 
   const formatCount = (count: number) => {

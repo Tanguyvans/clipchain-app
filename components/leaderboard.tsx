@@ -12,6 +12,7 @@ interface LeaderboardUser {
   avatar: string
   votes?: number
   likes?: number
+  recasts?: number
   videos?: number
   casts?: number
   trend?: "up" | "down" | "same"
@@ -130,12 +131,15 @@ export function Leaderboard() {
             )}
           </div>
 
-          {/* Votes/Likes */}
+          {/* Recasts/Engagement */}
           <div className="text-right">
             <p className={`text-lg font-bold ${user.rank <= 3 ? "text-primary" : "text-foreground"}`}>
-              {formatCount(user.likes || user.votes)}
+              {formatCount(user.recasts || user.votes || 0)}
             </p>
-            <p className="text-xs text-muted-foreground">{user.likes ? "likes" : "votes"}</p>
+            <p className="text-xs text-muted-foreground">recasts</p>
+            {user.likes && user.likes > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">{formatCount(user.likes)} likes</p>
+            )}
           </div>
         </div>
       ))}
@@ -152,7 +156,7 @@ export function Leaderboard() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground text-balance">Leaderboard</h1>
-            <p className="text-sm text-muted-foreground text-balance">Top creators by votes</p>
+            <p className="text-sm text-muted-foreground text-balance">Top creators by recasts</p>
           </div>
         </div>
       </div>

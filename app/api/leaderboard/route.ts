@@ -22,6 +22,7 @@ interface LeaderboardUser {
   fid: number;
   avatar: string;
   likes: number;
+  recasts: number;
   casts: number;
   displayName?: string;
   castUrls?: string[];
@@ -37,12 +38,13 @@ export async function GET(_request: NextRequest) {
 
     console.log(`Found ${searchResults.result.casts.length} casts mentioning #clipchain`);
 
-    // Aggregate users by total likes across their casts
-    const userLikesMap = new Map<number, {
+    // Aggregate users by total recasts and likes across their casts
+    const userStatsMap = new Map<number, {
       username: string;
       fid: number;
       avatar: string;
       totalLikes: number;
+      totalRecasts: number;
       castCount: number;
       displayName?: string;
       castUrls: string[];
@@ -63,24 +65,27 @@ export async function GET(_request: NextRequest) {
       const author = cast.author;
       const fid = author.fid;
       const likes = cast.reactions.likes_count || 0;
+      const recasts = cast.reactions.recasts_count || 0;
       const castUrl = `https://warpcast.com/${author.username}/${cast.hash.slice(0, 10)}`;
 
-      // Only count casts with likes
-      if (likes === 0) {
+      // Only count casts with engagement (likes or recasts)
+      if (likes === 0 && recasts === 0) {
         return;
       }
 
-      if (userLikesMap.has(fid)) {
-        const user = userLikesMap.get(fid)!;
+      if (userStatsMap.has(fid)) {
+        const user = userStatsMap.get(fid)!;
         user.totalLikes += likes;
+        user.totalRecasts += recasts;
         user.castCount += 1;
         user.castUrls.push(castUrl);
       } else {
-        userLikesMap.set(fid, {
+        userStatsMap.set(fid, {
           username: author.username,
           fid: fid,
           avatar: author.pfp_url || "",
           totalLikes: likes,
+          totalRecasts: recasts,
           castCount: 1,
           displayName: author.display_name || author.username,
           castUrls: [castUrl],
@@ -88,9 +93,16 @@ export async function GET(_request: NextRequest) {
       }
     });
 
-    // Convert to array and sort by total likes
-    const leaderboard: LeaderboardUser[] = Array.from(userLikesMap.values())
-      .sort((a, b) => b.totalLikes - a.totalLikes)
+    // Convert to array and sort by total recasts (primary), then likes (secondary)
+    const leaderboard: LeaderboardUser[] = Array.from(userStatsMap.values())
+      .sort((a, b) => {
+        // Sort by recasts first
+        if (b.totalRecasts !== a.totalRecasts) {
+          return b.totalRecasts - a.totalRecasts;
+        }
+        // If recasts are equal, sort by likes
+        return b.totalLikes - a.totalLikes;
+      })
       .slice(0, 10) // Top 10 users
       .map((user, index) => ({
         rank: index + 1,
@@ -98,6 +110,7 @@ export async function GET(_request: NextRequest) {
         fid: user.fid,
         avatar: user.avatar,
         likes: user.totalLikes,
+        recasts: user.totalRecasts,
         casts: user.castCount,
         displayName: user.displayName,
         castUrls: user.castUrls,
