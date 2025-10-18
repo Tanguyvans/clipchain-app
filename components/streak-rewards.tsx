@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Flame, Coins, Gift, Calendar, Sparkles, Check, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/useAuth"
+import { useEnsName } from "wagmi"
+import { base } from "wagmi/chains"
 
 interface DayReward {
   day: number
@@ -17,6 +19,12 @@ export function StreakRewards() {
   const [currentStreak, setCurrentStreak] = useState(5)
   const [totalCredits, setTotalCredits] = useState(850)
   const [canClaim, setCanClaim] = useState(true)
+
+  // Resolve ENS name for the wallet address
+  const { data: ensName } = useEnsName({
+    address: walletAddress as `0x${string}` | undefined,
+    chainId: base.id,
+  })
 
   const weekRewards: DayReward[] = [
     { day: 1, credits: 10, claimed: true, isToday: false },
@@ -72,7 +80,9 @@ export function StreakRewards() {
             {isWalletConnected && walletAddress && (
               <div className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 backdrop-blur-sm">
                 <Wallet className="h-5 w-5 flex-shrink-0" />
-                <span className="font-mono text-xs truncate">{walletAddress}</span>
+                <span className="font-mono text-xs truncate">
+                  {ensName || walletAddress}
+                </span>
               </div>
             )}
           </div>
