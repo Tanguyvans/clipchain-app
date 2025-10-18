@@ -33,5 +33,8 @@
             "actions.signIn",
             "wallet.getEthereumProvider"
         ]
+    },
+    "baseBuilder": {
+        "ownerAddress": "0x09692Bda327C8b7346f8e320Ab2793bE00D75481"
     }
 }
