@@ -110,7 +110,7 @@ export default function AuthDemo() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <ol className="list-decimal list-inside space-y-2">
-            <li>Click "Sign In with Farcaster" to start authentication</li>
+            <li>Click &quot;Sign In with Farcaster&quot; to start authentication</li>
             <li>The SDK obtains a JWT token from Quick Auth</li>
             <li>The token is sent to your backend for verification</li>
             <li>Your backend verifies the token and returns user data</li>

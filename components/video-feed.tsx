@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import { Heart, MessageCircle, Share2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-interface Video {
+export interface Video {
   id: string
   username: string
   avatar: string
@@ -16,49 +16,38 @@ interface Video {
   isLiked: boolean
 }
 
-const mockVideos: Video[] = [
+export const mockVideos: Video[] = [
   {
-    id: "1",
-    username: "creative_alex",
+    id: "TvNXEwNfAkR7wUtp0foIV_zugMcRgz",
+    username: "creative_monkey",
     avatar: "/diverse-user-avatars.png",
-    description: "Check out this amazing sunset! 🌅 #nature #beautiful",
+    description: "Check out this amazing video! 🎬 #creative #viral",
     likes: 12400,
     comments: 234,
     shares: 89,
-    videoUrl: "/sunset-beach-video.jpg",
+    videoUrl: "https://v3b.fal.media/files/b/monkey/TvNXEwNfAkR7wUtp0foIV_zugMcRgz.mp4",
     isLiked: false,
   },
   {
-    id: "2",
-    username: "dance_queen",
+    id: "49AK4V5zO6RkFNfI-wiHc_ype2StUS",
+    username: "tiger_studio",
     avatar: "/dancer-avatar.png",
-    description: "New dance routine! Who can do this? 💃 #dance #challenge",
+    description: "Epic content alert! 🐯 #trending #amazing",
     likes: 45200,
     comments: 892,
     shares: 234,
-    videoUrl: "/dance-studio-video.jpg",
+    videoUrl: "https://v3b.fal.media/files/b/tiger/49AK4V5zO6RkFNfI-wiHc_ype2StUS.mp4",
     isLiked: false,
   },
   {
-    id: "3",
-    username: "food_lover",
+    id: "49AK4V5zO6RkFNfI-wiHc_ype2StUS-2",
+    username: "viral_creator",
     avatar: "/chef-avatar.png",
-    description: "Perfect pasta recipe 🍝 #cooking #foodie",
+    description: "You won't believe this! 🔥 #mustwatch #viral",
     likes: 28900,
     comments: 456,
     shares: 167,
-    videoUrl: "/cooking-pasta-video.jpg",
-    isLiked: false,
-  },
-  {
-    id: "4",
-    username: "tech_guru",
-    avatar: "/tech-person-avatar.png",
-    description: "Mind-blowing tech hack! 🚀 #tech #innovation",
-    likes: 67800,
-    comments: 1203,
-    shares: 445,
-    videoUrl: "/technology-gadget-video.jpg",
+    videoUrl: "https://v3b.fal.media/files/b/tiger/49AK4V5zO6RkFNfI-wiHc_ype2StUS.mp4",
     isLiked: false,
   },
 ]
@@ -110,10 +99,13 @@ export function VideoFeed() {
         >
           {/* Video Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60">
-            <img
-              src={video.videoUrl || "/placeholder.svg"}
-              alt={video.description}
+            <video
+              src={video.videoUrl}
               className="h-full w-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
             />
           </div>
 
