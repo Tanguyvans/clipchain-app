@@ -68,7 +68,7 @@ export default function VideoPage() {
 
 ### Option 2: Programmatic Posting via API
 
-This approach posts directly to your backend API, which can then publish to Farcaster.
+This approach posts directly to your backend API, which can then publish to Farcaster. The component automatically handles authentication using the Farcaster MiniApp SDK.
 
 ```tsx
 import { ComposeCastApi } from "@/components/compose-cast-api";
@@ -86,6 +86,8 @@ export default function VideoPage() {
   );
 }
 ```
+
+**Note**: This component uses `sdk.quickAuth.fetch` from `@farcaster/miniapp-sdk` to automatically include authentication tokens in the request.
 
 ### Integration with Video Page
 
