@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Like the cast using Neynar SDK
-    const result = await client.publishReactionToCast({
+    const result = await client.publishReaction({
       signerUuid,
       reactionType: "like",
       target: castHash,
