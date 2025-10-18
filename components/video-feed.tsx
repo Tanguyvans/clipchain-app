@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useComposeCast } from "@coinbase/onchainkit/minikit"
+import { useComposeCast, useViewCast } from "@coinbase/onchainkit/minikit"
 
 export interface Video {
   id: string
@@ -62,6 +62,7 @@ export function VideoFeed() {
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const { composeCast } = useComposeCast()
+  const { viewCast } = useViewCast()
 
   // Fetch videos from API
   useEffect(() => {
@@ -93,9 +94,9 @@ export function VideoFeed() {
   }, [])
 
   const handleLike = (video: Video) => {
-    // Open Warpcast to like the cast - Minikit doesn't have a native like action yet
-    if (video.castUrl) {
-      window.open(video.castUrl, '_blank');
+    // Open cast natively in Farcaster client where user can like
+    if (video.castHash) {
+      viewCast({ hash: video.castHash });
     }
   }
 
@@ -108,10 +109,9 @@ export function VideoFeed() {
   }
 
   const handleComment = (video: Video) => {
-    // Open Warpcast to comment on the cast
-    // Minikit's composeCast doesn't support parent cast replies yet
-    if (video.castUrl) {
-      window.open(video.castUrl, '_blank');
+    // Open cast natively in Farcaster client where user can comment
+    if (video.castHash) {
+      viewCast({ hash: video.castHash });
     }
   }
 
