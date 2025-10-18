@@ -6,24 +6,26 @@
     },
     "miniapp": {
         "version": "1",
-        "name": "New Mini App",
+        "name": "Video Vote",
         "iconUrl": "https://new-mini-app-quickstart-pi-nine.vercel.app/icon.png",
-        "homeUrl": "https://new-mini-app-quickstart-pi-nine.vercel.app",
+        "homeUrl": "https://new-mini-app-quickstart-pi-nine.vercel.app/feed",
         "splashImageUrl": "https://new-mini-app-quickstart-pi-nine.vercel.app/splash.png",
         "splashBackgroundColor": "#000000",
-        "subtitle": "A Farcaster Mini App on Base",
-        "description": "Built with Next.js, OnchainKit, and Farcaster SDK. Running on Base blockchain.",
+        "subtitle": "Vote on AI-generated videos",
+        "description": "Discover, vote, and compete! Watch AI-generated videos, maintain your daily streak for credits, and climb the leaderboard.",
         "screenshotUrls": [
             "https://new-mini-app-quickstart-pi-nine.vercel.app/screenshot-portrait.png"
         ],
-        "primaryCategory": "developer-tools",
+        "primaryCategory": "entertainment",
         "tags": [
-            "base",
-            "onchainkit",
-            "web3",
-            "farcaster"
+            "videos",
+            "voting",
+            "leaderboard",
+            "streak",
+            "base"
         ],
         "heroImageUrl": "https://new-mini-app-quickstart-pi-nine.vercel.app/hero.png",
+        "tagline": "Vote, Streak, Win",
         "requiredChains": [
             "eip155:8453"
         ],

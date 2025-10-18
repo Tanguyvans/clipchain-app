@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Source_Code_Pro } from "next/font/google";
+import { Inter } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
 import { RootProvider } from "./rootProvider";
+import { BottomNav } from "@/components/bottom-nav";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,11 +31,6 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const sourceCodePro = Source_Code_Pro({
-  variable: "--font-source-code-pro",
-  subsets: ["latin"],
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -43,8 +39,11 @@ export default function RootLayout({
   return (
     <RootProvider>
       <html lang="en">
-        <body className={`${inter.variable} ${sourceCodePro.variable}`}>
-          <SafeArea>{children}</SafeArea>
+        <body className={`${inter.variable} font-sans antialiased`}>
+          <SafeArea>
+            {children}
+            <BottomNav />
+          </SafeArea>
         </body>
       </html>
     </RootProvider>
