@@ -1,19 +1,22 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { Heart, MessageCircle, Share2 } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
+import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export interface Video {
   id: string
   username: string
+  fid?: number
   avatar: string
   description: string
   likes: number
   comments: number
   shares: number
   videoUrl: string
-  isLiked: boolean
+  castUrl?: string
+  castHash?: string
+  isLiked?: boolean
 }
 
 export const mockVideos: Video[] = [
@@ -53,8 +56,39 @@ export const mockVideos: Video[] = [
 ]
 
 export function VideoFeed() {
-  const [videos, setVideos] = useState<Video[]>(mockVideos)
+  const [videos, setVideos] = useState<Video[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Fetch videos from API
+  useEffect(() => {
+    const fetchVideos = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const response = await fetch("/api/videos")
+        const data = await response.json()
+
+        if (data.success && data.videos) {
+          setVideos(data.videos)
+        } else {
+          setError(data.error || "Failed to fetch videos")
+          // Fallback to mock data if API fails
+          setVideos(mockVideos)
+        }
+      } catch (err) {
+        console.error("Error fetching videos:", err)
+        setError("Failed to load videos")
+        // Fallback to mock data on error
+        setVideos(mockVideos)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchVideos()
+  }, [])
 
   const handleLike = (videoId: string) => {
     setVideos((prev) =>
@@ -80,6 +114,28 @@ export function VideoFeed() {
     return count.toString()
   }
 
+
+  if (isLoading) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-white" />
+          <p className="text-white text-sm">Loading ClipChain videos...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && videos.length === 0) {
+    return (
+      <div className="h-screen w-full bg-black flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 p-6 text-center">
+          <p className="text-white text-lg">No videos found</p>
+          <p className="text-gray-400 text-sm">Post a video with #clipchain to appear here!</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
