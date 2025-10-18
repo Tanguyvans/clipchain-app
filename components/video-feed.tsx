@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Heart, MessageCircle, Share2, Loader2 } from "lucide-react"
+import { Repeat, Send, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useComposeCast } from "@coinbase/onchainkit/minikit"
 
@@ -92,28 +92,19 @@ export function VideoFeed() {
     fetchVideos()
   }, [])
 
-  const handleLike = (video: Video) => {
-    // Minikit doesn't have native like action - best we can do is optimistic UI update
-    // Or open compose to encourage engagement
-    composeCast({
-      text: `Love this! 🔥 @${video.username} #clipchain`,
-      embeds: video.castUrl ? [video.castUrl] : [],
-    })
-  }
-
   const handleRecast = (video: Video) => {
-    // Use Minikit's composeCast to quote recast the video
+    // Use Minikit's composeCast to recast the video
     composeCast({
       text: `Check out this video by @${video.username}! #clipchain`,
       embeds: video.castUrl ? [video.castUrl] : [],
     })
   }
 
-  const handleComment = (video: Video) => {
-    // Use composeCast to create a comment/reply
+  const handleSendToGroups = (video: Video) => {
+    // Use composeCast to share to groups/channels
     composeCast({
-      text: ``, // Let user write their own comment
-      embeds: video.castUrl ? [video.castUrl] : [],
+      text: `Check out this AI video! #clipchain`,
+      embeds: [video.videoUrl],
     })
   }
 
@@ -196,33 +187,23 @@ export function VideoFeed() {
               {/* Right side - Action buttons */}
               <div className="flex flex-col items-center gap-6">
                 <button
-                  onClick={() => handleLike(video)}
-                  className="flex flex-col items-center gap-1 transition-transform active:scale-90"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
-                    <Heart className="h-6 w-6 text-white" />
-                  </div>
-                  <span className="text-xs font-semibold text-white">{formatCount(video.likes)}</span>
-                </button>
-
-                <button
-                  onClick={() => handleComment(video)}
-                  className="flex flex-col items-center gap-1 transition-transform active:scale-90"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
-                    <MessageCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <span className="text-xs font-semibold text-white">{formatCount(video.comments)}</span>
-                </button>
-
-                <button
                   onClick={() => handleRecast(video)}
                   className="flex flex-col items-center gap-1 transition-transform active:scale-90"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
-                    <Share2 className="h-6 w-6 text-white" />
+                    <Repeat className="h-6 w-6 text-white" />
                   </div>
                   <span className="text-xs font-semibold text-white">{formatCount(video.shares)}</span>
+                </button>
+
+                <button
+                  onClick={() => handleSendToGroups(video)}
+                  className="flex flex-col items-center gap-1 transition-transform active:scale-90"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
+                    <Send className="h-6 w-6 text-white" />
+                  </div>
+                  <span className="text-xs font-semibold text-white">Send</span>
                 </button>
               </div>
             </div>
