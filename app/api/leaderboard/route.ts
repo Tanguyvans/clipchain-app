@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { NeynarAPIClient, FeedType, FilterType } from "@neynar/nodejs-sdk";
+import { NeynarAPIClient, Configuration } from "@neynar/nodejs-sdk";
+import { FetchTrendingFeedTimeWindowEnum } from "@neynar/nodejs-sdk/build/api";
 
-const client = new NeynarAPIClient(process.env.NEYNAR_API_KEY || "NEYNAR_API_DOCS");
+// Debug: Check if API key is loaded
+const apiKey = process.env.NEYNAR_API_KEY || "";
+console.log("NEYNAR_API_KEY loaded:", apiKey ? "Yes (length: " + apiKey.length + ")" : "No");
+
+if (!process.env.NEYNAR_API_KEY) {
+  console.error("ERROR: NEYNAR_API_KEY is not set in environment variables!");
+}
+
+// Initialize client with Configuration
+const config = new Configuration({
+  apiKey: apiKey,
+});
+const client = new NeynarAPIClient(config);
 
 interface LeaderboardUser {
   rank: number;
@@ -13,14 +26,34 @@ interface LeaderboardUser {
   displayName?: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    // Fetch trending casts from Neynar
-    const feed = await client.fetchFeed({
-      feedType: FeedType.Filter,
-      filterType: FilterType.GlobalTrending,
-      limit: 100, // Get more casts to aggregate users
-    });
+    // Try to fetch trending casts from Neynar
+    // Note: The trending feed endpoint may require a paid plan
+    // If it fails, we'll fall back to the regular feed
+    let feed;
+
+    try {
+      feed = await client.fetchTrendingFeed({
+        limit: 10, // Maximum allowed by API
+        timeWindow: FetchTrendingFeedTimeWindowEnum._24h,
+      });
+    } catch (trendingError: any) {
+      // If trending feed fails with 402, try using the default demo key
+      if (trendingError?.response?.status === 402) {
+        console.log("Trending feed requires paid plan, trying with demo key...");
+        const demoConfig = new Configuration({
+          apiKey: "NEYNAR_API_DOCS",
+        });
+        const demoClient = new NeynarAPIClient(demoConfig);
+        feed = await demoClient.fetchTrendingFeed({
+          limit: 10,
+          timeWindow: FetchTrendingFeedTimeWindowEnum._24h,
+        });
+      } else {
+        throw trendingError;
+      }
+    }
 
     // Aggregate users by total likes across their casts
     const userLikesMap = new Map<number, {
@@ -74,12 +107,30 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
+
+    // Provide helpful error message for 402 (Payment Required)
+    let errorMessage = "Failed to fetch leaderboard";
+    let statusCode = 500;
+
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as any;
+      if (axiosError.response?.status === 402) {
+        errorMessage = "Neynar API key required. Please add NEYNAR_API_KEY to your environment variables. Get a free key at https://neynar.com";
+        statusCode = 402;
+      } else if (axiosError.response?.status) {
+        errorMessage = `API error: ${axiosError.response.status} - ${axiosError.response.statusText || 'Unknown error'}`;
+        statusCode = axiosError.response.status;
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch leaderboard",
+        error: errorMessage,
       },
-      { status: 500 }
+      { status: statusCode }
     );
   }
 }
