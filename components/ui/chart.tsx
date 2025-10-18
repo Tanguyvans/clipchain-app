@@ -120,9 +120,12 @@ function ChartTooltipContent({
   labelKey,
 }: React.ComponentProps<'div'> & {
   active?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any[]
   label?: string | number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   labelFormatter?: (value: any, payload: any[]) => string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   formatter?: (value: any, name: string, item: any, index: number, payload?: any) => React.ReactNode
   color?: string
   hideLabel?: boolean
@@ -263,6 +266,7 @@ function ChartLegendContent({
   verticalAlign = 'bottom',
   nameKey,
 }: React.ComponentProps<'div'> & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any[]
   verticalAlign?: 'top' | 'bottom'
   hideIcon?: boolean
@@ -282,6 +286,7 @@ function ChartLegendContent({
         className,
       )}
     >
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((item: any) => {
         const key = `${nameKey || item.dataKey || 'value'}`
         const itemConfig = getPayloadConfigFromPayload(config, item, key)
