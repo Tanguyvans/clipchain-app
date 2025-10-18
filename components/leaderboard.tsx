@@ -116,12 +116,6 @@ export function Leaderboard() {
     return count.toString()
   }
 
-  const getRankColor = (rank: number) => {
-    if (rank === 1) return "text-yellow-500"
-    if (rank === 2) return "text-slate-400"
-    if (rank === 3) return "text-amber-700"
-    return "text-muted-foreground"
-  }
 
   const getRankBadge = (rank: number) => {
     if (rank === 1) return <Crown className="h-5 w-5 text-yellow-500 fill-yellow-500" />

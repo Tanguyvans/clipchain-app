@@ -124,7 +124,7 @@ export function StreakRewards() {
             className="mt-6 w-full bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
           >
             <Gift className="mr-2 h-5 w-5" />
-            Claim Today's Reward
+            Claim Today&apos;s Reward
           </Button>
         )}
 

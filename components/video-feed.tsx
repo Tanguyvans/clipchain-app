@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Heart, MessageCircle, Share2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -65,7 +65,6 @@ const mockVideos: Video[] = [
 
 export function VideoFeed() {
   const [videos, setVideos] = useState<Video[]>(mockVideos)
-  const [currentIndex, setCurrentIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleLike = (videoId: string) => {
@@ -92,20 +91,6 @@ export function VideoFeed() {
     return count.toString()
   }
 
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const handleScroll = () => {
-      const scrollTop = container.scrollTop
-      const itemHeight = container.clientHeight
-      const index = Math.round(scrollTop / itemHeight)
-      setCurrentIndex(index)
-    }
-
-    container.addEventListener("scroll", handleScroll)
-    return () => container.removeEventListener("scroll", handleScroll)
-  }, [])
 
   return (
     <div
