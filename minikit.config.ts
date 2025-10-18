@@ -8,7 +8,7 @@ const ROOT_URL =
  * @see {@link https://miniapps.farcaster.xyz/docs/guides/publishing}
  */
 export const minikitConfig = {
-  accountAssociation: {
+  "accountAssociation": {
     "header": "eyJmaWQiOjUwNjQyMCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDAxMTIyNGZFOWU3NTJkNDRiREExNzIxQTRmQUZkRGQ4NjhiYzRCMkQifQ",
     "payload": "eyJkb21haW4iOiJuZXctbWluaS1hcHAtcXVpY2tzdGFydC1uYXZ5LnZlcmNlbC5hcHAifQ",
     "signature": "qksw5ZNipSx75JklmTr8O2kH9eR3jcT8CcF2jZI1f0oUX7/wGz+nDVnnwaBKix9n8mNrcBgA1jCz35luOLYSQhw="

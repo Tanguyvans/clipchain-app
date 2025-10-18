@@ -3,5 +3,33 @@
         "header": "eyJmaWQiOjUwNjQyMCwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDAxMTIyNGZFOWU3NTJkNDRiREExNzIxQTRmQUZkRGQ4NjhiYzRCMkQifQ",
         "payload": "eyJkb21haW4iOiJuZXctbWluaS1hcHAtcXVpY2tzdGFydC10YXdueS52ZXJjZWwuYXBwIn0",
         "signature": "roUeaHyC/EuNpY6xshQO0VHwhwxemap5ifNyrS0rNQ0DTBIb4wG8YwNKoU0UIn0T4MbRDl1/Upl2Q5V0YKA6qhs="
+    },
+    "miniapp": {
+        "version": "1",
+        "name": "New Mini App",
+        "iconUrl": "https://new-mini-app-quickstart-tawny.vercel.app/icon.png",
+        "homeUrl": "https://new-mini-app-quickstart-tawny.vercel.app",
+        "splashImageUrl": "https://new-mini-app-quickstart-tawny.vercel.app/splash.png",
+        "splashBackgroundColor": "#000000",
+        "subtitle": "A Farcaster Mini App on Base",
+        "description": "Built with Next.js, OnchainKit, and Farcaster SDK. Running on Base blockchain.",
+        "screenshotUrls": [
+            "https://new-mini-app-quickstart-tawny.vercel.app/screenshot-portrait.png"
+        ],
+        "primaryCategory": "developer-tools",
+        "tags": [
+            "base",
+            "onchainkit",
+            "web3",
+            "farcaster"
+        ],
+        "heroImageUrl": "https://new-mini-app-quickstart-tawny.vercel.app/hero.png",
+        "requiredChains": [
+            "eip155:8453"
+        ],
+        "requiredCapabilities": [
+            "actions.signIn",
+            "wallet.getEthereumProvider"
+        ]
     }
 }
