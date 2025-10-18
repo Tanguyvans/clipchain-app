@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useComposeCast } from "@coinbase/onchainkit/minikit";
 import { toast } from "sonner";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function PostVideoPage() {
+function PostVideoContent() {
   const searchParams = useSearchParams();
   const { composeCast } = useComposeCast();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -79,5 +79,19 @@ export default function PostVideoPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function PostVideoPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <PostVideoContent />
+    </Suspense>
   );
 }
