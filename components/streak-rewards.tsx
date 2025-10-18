@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Flame, Coins, Gift, Calendar, Sparkles, Check } from "lucide-react"
+import { Flame, Coins, Gift, Calendar, Sparkles, Check, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
 
 interface DayReward {
   day: number
@@ -12,6 +13,7 @@ interface DayReward {
 }
 
 export function StreakRewards() {
+  const { walletAddress, isWalletConnected } = useAuth()
   const [currentStreak, setCurrentStreak] = useState(5)
   const [totalCredits, setTotalCredits] = useState(850)
   const [canClaim, setCanClaim] = useState(true)
@@ -62,9 +64,17 @@ export function StreakRewards() {
             </div>
             <Flame className="h-16 w-16 opacity-20" />
           </div>
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 backdrop-blur-sm">
-            <Coins className="h-5 w-5" />
-            <span className="font-semibold">{totalCredits} Credits</span>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 backdrop-blur-sm">
+              <Coins className="h-5 w-5" />
+              <span className="font-semibold">{totalCredits} Credits</span>
+            </div>
+            {isWalletConnected && walletAddress && (
+              <div className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 backdrop-blur-sm">
+                <Wallet className="h-5 w-5 flex-shrink-0" />
+                <span className="font-mono text-xs truncate">{walletAddress}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
