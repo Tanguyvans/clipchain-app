@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, Trophy, Flame } from "lucide-react"
+import { Home, Trophy, Flame, Video } from "lucide-react"
 
 export function BottomNav() {
   const pathname = usePathname()
@@ -25,6 +25,12 @@ export function BottomNav() {
       label: "Streak",
       icon: Flame,
       active: pathname === "/streak",
+    },
+    {
+      href: "/post-video",
+      label: "Post Video",
+      icon: Video,
+      active: pathname === "/post-video",
     },
   ]
 
