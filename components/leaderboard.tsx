@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Trophy, TrendingUp, Clock, Crown, RefreshCw, Loader2 } from "lucide-react"
+import { Trophy, Crown, RefreshCw, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 
 interface LeaderboardUser {
@@ -17,61 +16,12 @@ interface LeaderboardUser {
   casts?: number
   trend?: "up" | "down" | "same"
   displayName?: string
+  castUrls?: string[]
 }
 
-const allTimeLeaders: LeaderboardUser[] = [
-  { rank: 1, username: "tech_guru", avatar: "/tech-person-avatar.png", votes: 67800, videos: 45 },
-  { rank: 2, username: "dance_queen", avatar: "/dancer-avatar.png", votes: 45200, videos: 89 },
-  { rank: 3, username: "food_lover", avatar: "/chef-avatar.png", votes: 28900, videos: 67 },
-  { rank: 4, username: "creative_alex", avatar: "/diverse-user-avatars.png", votes: 12400, videos: 34 },
-  { rank: 5, username: "fitness_pro", avatar: "/placeholder.svg?height=40&width=40", votes: 9800, videos: 56 },
-  { rank: 6, username: "music_maker", avatar: "/placeholder.svg?height=40&width=40", votes: 8500, videos: 78 },
-  { rank: 7, username: "art_wizard", avatar: "/placeholder.svg?height=40&width=40", votes: 7200, videos: 23 },
-  { rank: 8, username: "travel_bug", avatar: "/placeholder.svg?height=40&width=40", votes: 6900, videos: 41 },
-]
-
-const weeklyLeaders: LeaderboardUser[] = [
-  { rank: 1, username: "dance_queen", avatar: "/dancer-avatar.png", votes: 8900, videos: 12, trend: "up" },
-  { rank: 2, username: "tech_guru", avatar: "/tech-person-avatar.png", votes: 7600, videos: 8, trend: "same" },
-  {
-    rank: 3,
-    username: "fitness_pro",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 5400,
-    videos: 15,
-    trend: "up",
-  },
-  { rank: 4, username: "food_lover", avatar: "/chef-avatar.png", votes: 4200, videos: 9, trend: "down" },
-  {
-    rank: 5,
-    username: "music_maker",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 3800,
-    videos: 11,
-    trend: "up",
-  },
-  { rank: 6, username: "creative_alex", avatar: "/diverse-user-avatars.png", votes: 2900, videos: 6, trend: "same" },
-  {
-    rank: 7,
-    username: "travel_bug",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 2100,
-    videos: 7,
-    trend: "down",
-  },
-  {
-    rank: 8,
-    username: "art_wizard",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 1800,
-    videos: 4,
-    trend: "up",
-  },
-]
 
 
 export function Leaderboard() {
-  const [activeTab, setActiveTab] = useState("alltime")
   const [trendingLeaders, setTrendingLeaders] = useState<LeaderboardUser[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -160,6 +110,24 @@ export function Leaderboard() {
             <p className="text-sm text-muted-foreground">
               {user.casts || user.videos || 0} {user.casts ? "casts" : "videos"}
             </p>
+            {user.castUrls && user.castUrls.length > 0 && (
+              <div className="flex gap-1 mt-1 flex-wrap">
+                {user.castUrls.slice(0, 3).map((url, idx) => (
+                  <a
+                    key={idx}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Cast {idx + 1}
+                  </a>
+                ))}
+                {user.castUrls.length > 3 && (
+                  <span className="text-xs text-muted-foreground">+{user.castUrls.length - 3} more</span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Votes/Likes */}
@@ -189,67 +157,38 @@ export function Leaderboard() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Content */}
       <div className="px-6 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="alltime" className="gap-2">
-              <Trophy className="h-4 w-4" />
-              <span className="hidden sm:inline">All Time</span>
-              <span className="sm:hidden">All</span>
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="gap-2">
-              <Clock className="h-4 w-4" />
-              Weekly
-            </TabsTrigger>
-            <TabsTrigger value="trending" className="gap-2">
-              <TrendingUp className="h-4 w-4" />
-              <span className="hidden sm:inline">Trending</span>
-              <span className="sm:hidden">Today</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="alltime" className="mt-0">
-            {renderLeaderboardList(allTimeLeaders)}
-          </TabsContent>
-
-          <TabsContent value="weekly" className="mt-0">
-            {renderLeaderboardList(weeklyLeaders)}
-          </TabsContent>
-
-          <TabsContent value="trending" className="mt-0">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading trending creators from Farcaster...</p>
-              </div>
-            ) : error ? (
-              <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <p className="text-sm text-destructive">{error}</p>
-                <Button onClick={fetchTrendingLeaders} variant="outline" size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-              </div>
-            ) : trendingLeaders.length > 0 ? (
-              <>
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Live data from Farcaster via Neynar API
-                  </p>
-                  <Button onClick={fetchTrendingLeaders} variant="ghost" size="sm">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                </div>
-                {renderLeaderboardList(trendingLeaders)}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground">No trending data available</p>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading trending creators from Farcaster...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <p className="text-sm text-destructive">{error}</p>
+            <Button onClick={fetchTrendingLeaders} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry
+            </Button>
+          </div>
+        ) : trendingLeaders.length > 0 ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Live data from Farcaster via Neynar API
+              </p>
+              <Button onClick={fetchTrendingLeaders} variant="ghost" size="sm">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            {renderLeaderboardList(trendingLeaders)}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">No trending data available</p>
+          </div>
+        )}
       </div>
     </div>
   )

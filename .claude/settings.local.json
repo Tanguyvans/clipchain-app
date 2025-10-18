@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -X GET \"https://api.neynar.com/v2/farcaster/cast/search?q=@clipchain&limit=10\" -H \"accept: application/json\" -H \"x-api-key: B46490C5-4039-428F-B689-CD897DE840C4\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

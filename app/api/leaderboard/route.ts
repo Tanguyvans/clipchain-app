@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NeynarAPIClient, Configuration } from "@neynar/nodejs-sdk";
-import { FetchTrendingFeedTimeWindowEnum } from "@neynar/nodejs-sdk/build/api";
+import { Cast } from "@neynar/nodejs-sdk/build/api";
 
 // Debug: Check if API key is loaded
 const apiKey = process.env.NEYNAR_API_KEY || "";
@@ -24,37 +24,18 @@ interface LeaderboardUser {
   likes: number;
   casts: number;
   displayName?: string;
+  castUrls?: string[];
 }
 
 export async function GET(_request: NextRequest) {
   try {
-    // Try to fetch trending casts from Neynar
-    // Note: The trending feed endpoint may require a paid plan
-    // If it fails, we'll fall back to the regular feed
-    let feed;
+    // Search for casts mentioning #clipchain
+    const searchResults = await client.searchCasts({
+      q: "#clipchain",
+      limit: 100, // Get more results to have better data
+    });
 
-    try {
-      feed = await client.fetchTrendingFeed({
-        limit: 10, // Maximum allowed by API
-        timeWindow: FetchTrendingFeedTimeWindowEnum._24h,
-      });
-    } catch (trendingError: unknown) {
-      // If trending feed fails with 402, try using the default demo key
-      const error = trendingError as { response?: { status?: number } };
-      if (error?.response?.status === 402) {
-        console.log("Trending feed requires paid plan, trying with demo key...");
-        const demoConfig = new Configuration({
-          apiKey: "NEYNAR_API_DOCS",
-        });
-        const demoClient = new NeynarAPIClient(demoConfig);
-        feed = await demoClient.fetchTrendingFeed({
-          limit: 10,
-          timeWindow: FetchTrendingFeedTimeWindowEnum._24h,
-        });
-      } else {
-        throw trendingError;
-      }
-    }
+    console.log(`Found ${searchResults.result.casts.length} casts mentioning #clipchain`);
 
     // Aggregate users by total likes across their casts
     const userLikesMap = new Map<number, {
@@ -64,17 +45,35 @@ export async function GET(_request: NextRequest) {
       totalLikes: number;
       castCount: number;
       displayName?: string;
+      castUrls: string[];
     }>();
 
-    feed.casts.forEach((cast) => {
+    searchResults.result.casts.forEach((cast: Cast) => {
+      // Check if cast has a .mp4 video URL
+      const hasMP4Video = cast.embeds?.some((embed: any) => {
+        return embed.url && typeof embed.url === 'string' && embed.url.includes('.mp4');
+      }) || cast.text?.includes('.mp4');
+
+      // Skip casts without .mp4 videos
+      if (!hasMP4Video) {
+        return;
+      }
+
       const author = cast.author;
       const fid = author.fid;
       const likes = cast.reactions.likes_count || 0;
+      const castUrl = `https://warpcast.com/${author.username}/${cast.hash.slice(0, 10)}`;
+
+      // Only count casts with likes
+      if (likes === 0) {
+        return;
+      }
 
       if (userLikesMap.has(fid)) {
         const user = userLikesMap.get(fid)!;
         user.totalLikes += likes;
         user.castCount += 1;
+        user.castUrls.push(castUrl);
       } else {
         userLikesMap.set(fid, {
           username: author.username,
@@ -83,6 +82,7 @@ export async function GET(_request: NextRequest) {
           totalLikes: likes,
           castCount: 1,
           displayName: author.display_name || author.username,
+          castUrls: [castUrl],
         });
       }
     });
@@ -99,6 +99,7 @@ export async function GET(_request: NextRequest) {
         likes: user.totalLikes,
         casts: user.castCount,
         displayName: user.displayName,
+        castUrls: user.castUrls,
       }));
 
     return NextResponse.json({
@@ -109,14 +110,21 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
 
+    // Log full error details for debugging
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as { response?: { status?: number; statusText?: string; data?: any } };
+      console.error("Response status:", axiosError.response?.status);
+      console.error("Response data:", axiosError.response?.data);
+    }
+
     // Provide helpful error message for 402 (Payment Required)
     let errorMessage = "Failed to fetch leaderboard";
     let statusCode = 500;
 
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { status?: number; statusText?: string } };
+      const axiosError = error as { response?: { status?: number; statusText?: string; data?: any } };
       if (axiosError.response?.status === 402) {
-        errorMessage = "Neynar API key required. Please add NEYNAR_API_KEY to your environment variables. Get a free key at https://neynar.com";
+        errorMessage = "Search API requires a paid Neynar plan. Current API key has limited access.";
         statusCode = 402;
       } else if (axiosError.response?.status) {
         errorMessage = `API error: ${axiosError.response.status} - ${axiosError.response.statusText || 'Unknown error'}`;
