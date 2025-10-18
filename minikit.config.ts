@@ -13,9 +13,6 @@ export const minikitConfig = {
     "payload": "eyJkb21haW4iOiJuZXctbWluaS1hcHAtcXVpY2tzdGFydC1waS1uaW5lLnZlcmNlbC5hcHAifQ",
     "signature": "ZuM/2UAQNaPFrdnDEyW7hz/RtAuXpfV0+yH+WSepLfFhtV5Ug3/otPjblcyD4uNGe43Rn/l+zQQ5DCzAISiT1hw="
   },
-  "baseBuilder": {
-    "ownerAddress": "0x09692Bda327C8b7346f8e320Ab2793bE00D75481"
-  },
   miniapp: {
     version: "1",
     name: "Sora-AI",
@@ -35,5 +32,8 @@ export const minikitConfig = {
     ogDescription: "",
     ogImageUrl: `${ROOT_URL}/blue-hero.png`,
   },
+  "baseBuilder": {
+    "ownerAddress": "0x09692Bda327C8b7346f8e320Ab2793bE00D75481"
+  }
 } as const;
 
