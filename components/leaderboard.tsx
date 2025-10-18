@@ -1,17 +1,22 @@
 "use client"
 
-import { useState } from "react"
-import { Trophy, TrendingUp, Clock, Crown } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Trophy, TrendingUp, Clock, Crown, RefreshCw, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 
 interface LeaderboardUser {
   rank: number
   username: string
+  fid?: number
   avatar: string
-  votes: number
-  videos: number
+  votes?: number
+  likes?: number
+  videos?: number
+  casts?: number
   trend?: "up" | "down" | "same"
+  displayName?: string
 }
 
 const allTimeLeaders: LeaderboardUser[] = [
@@ -64,49 +69,41 @@ const weeklyLeaders: LeaderboardUser[] = [
   },
 ]
 
-const trendingLeaders: LeaderboardUser[] = [
-  {
-    rank: 1,
-    username: "fitness_pro",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 1200,
-    videos: 3,
-    trend: "up",
-  },
-  { rank: 2, username: "dance_queen", avatar: "/dancer-avatar.png", votes: 980, videos: 2, trend: "up" },
-  {
-    rank: 3,
-    username: "music_maker",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 850,
-    videos: 4,
-    trend: "up",
-  },
-  { rank: 4, username: "tech_guru", avatar: "/tech-person-avatar.png", votes: 720, videos: 1, trend: "same" },
-  {
-    rank: 5,
-    username: "art_wizard",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 650,
-    videos: 2,
-    trend: "up",
-  },
-  { rank: 6, username: "food_lover", avatar: "/chef-avatar.png", votes: 540, videos: 1, trend: "down" },
-  {
-    rank: 7,
-    username: "travel_bug",
-    avatar: "/placeholder.svg?height=40&width=40",
-    votes: 420,
-    videos: 2,
-    trend: "up",
-  },
-  { rank: 8, username: "creative_alex", avatar: "/diverse-user-avatars.png", votes: 380, videos: 1, trend: "same" },
-]
 
 export function Leaderboard() {
   const [activeTab, setActiveTab] = useState("alltime")
+  const [trendingLeaders, setTrendingLeaders] = useState<LeaderboardUser[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const formatCount = (count: number) => {
+  // Fetch trending users from Neynar API
+  const fetchTrendingLeaders = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/leaderboard")
+      const data = await response.json()
+
+      if (data.success && data.leaderboard) {
+        setTrendingLeaders(data.leaderboard)
+      } else {
+        setError(data.error || "Failed to fetch leaderboard")
+      }
+    } catch (err) {
+      console.error("Error fetching trending leaders:", err)
+      setError("Failed to fetch leaderboard data")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Fetch on mount
+    fetchTrendingLeaders()
+  }, [])
+
+  const formatCount = (count?: number) => {
+    if (!count) return "0"
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M`
     }
@@ -128,7 +125,7 @@ export function Leaderboard() {
     <div className="space-y-2">
       {leaders.map((user) => (
         <div
-          key={user.username}
+          key={user.fid || user.username}
           className={`flex items-center gap-4 rounded-xl p-4 transition-colors ${
             user.rank <= 3 ? "bg-gradient-to-r from-primary/5 to-transparent" : "bg-muted/30"
           }`}
@@ -160,15 +157,17 @@ export function Leaderboard() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{user.videos} videos</p>
+            <p className="text-sm text-muted-foreground">
+              {user.casts || user.videos || 0} {user.casts ? "casts" : "videos"}
+            </p>
           </div>
 
-          {/* Votes */}
+          {/* Votes/Likes */}
           <div className="text-right">
             <p className={`text-lg font-bold ${user.rank <= 3 ? "text-primary" : "text-foreground"}`}>
-              {formatCount(user.votes)}
+              {formatCount(user.likes || user.votes)}
             </p>
-            <p className="text-xs text-muted-foreground">votes</p>
+            <p className="text-xs text-muted-foreground">{user.likes ? "likes" : "votes"}</p>
           </div>
         </div>
       ))}
@@ -219,7 +218,36 @@ export function Leaderboard() {
           </TabsContent>
 
           <TabsContent value="trending" className="mt-0">
-            {renderLeaderboardList(trendingLeaders)}
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading trending creators from Farcaster...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <p className="text-sm text-destructive">{error}</p>
+                <Button onClick={fetchTrendingLeaders} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            ) : trendingLeaders.length > 0 ? (
+              <>
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    Live data from Farcaster via Neynar API
+                  </p>
+                  <Button onClick={fetchTrendingLeaders} variant="ghost" size="sm">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                {renderLeaderboardList(trendingLeaders)}
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-sm text-muted-foreground">No trending data available</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
