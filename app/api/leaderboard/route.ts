@@ -38,9 +38,10 @@ export async function GET(_request: NextRequest) {
         limit: 10, // Maximum allowed by API
         timeWindow: FetchTrendingFeedTimeWindowEnum._24h,
       });
-    } catch (trendingError: any) {
+    } catch (trendingError: unknown) {
       // If trending feed fails with 402, try using the default demo key
-      if (trendingError?.response?.status === 402) {
+      const error = trendingError as { response?: { status?: number } };
+      if (error?.response?.status === 402) {
         console.log("Trending feed requires paid plan, trying with demo key...");
         const demoConfig = new Configuration({
           apiKey: "NEYNAR_API_DOCS",
@@ -113,7 +114,7 @@ export async function GET(_request: NextRequest) {
     let statusCode = 500;
 
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as any;
+      const axiosError = error as { response?: { status?: number; statusText?: string } };
       if (axiosError.response?.status === 402) {
         errorMessage = "Neynar API key required. Please add NEYNAR_API_KEY to your environment variables. Get a free key at https://neynar.com";
         statusCode = 402;
