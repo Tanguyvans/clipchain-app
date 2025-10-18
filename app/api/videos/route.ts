@@ -41,8 +41,9 @@ export async function GET(_request: NextRequest) {
 
       if (cast.embeds) {
         for (const embed of cast.embeds) {
-          if (embed.url && typeof embed.url === 'string' && embed.url.includes('.mp4')) {
-            videoUrl = embed.url;
+          const embedUrl = 'url' in embed ? embed.url : null;
+          if (embedUrl && typeof embedUrl === 'string' && embedUrl.includes('.mp4')) {
+            videoUrl = embedUrl;
             break;
           }
         }
@@ -97,7 +98,7 @@ export async function GET(_request: NextRequest) {
     let statusCode = 500;
 
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { status?: number; statusText?: string; data?: any } };
+      const axiosError = error as { response?: { status?: number; statusText?: string; data?: unknown } };
       if (axiosError.response?.status === 402) {
         errorMessage = "Search API requires a paid Neynar plan.";
         statusCode = 402;

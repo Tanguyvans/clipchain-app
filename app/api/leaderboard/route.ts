@@ -50,8 +50,9 @@ export async function GET(_request: NextRequest) {
 
     searchResults.result.casts.forEach((cast: Cast) => {
       // Check if cast has a .mp4 video URL
-      const hasMP4Video = cast.embeds?.some((embed: any) => {
-        return embed.url && typeof embed.url === 'string' && embed.url.includes('.mp4');
+      const hasMP4Video = cast.embeds?.some((embed) => {
+        const embedUrl = 'url' in embed ? embed.url : null;
+        return embedUrl && typeof embedUrl === 'string' && embedUrl.includes('.mp4');
       }) || cast.text?.includes('.mp4');
 
       // Skip casts without .mp4 videos
@@ -112,7 +113,7 @@ export async function GET(_request: NextRequest) {
 
     // Log full error details for debugging
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { status?: number; statusText?: string; data?: any } };
+      const axiosError = error as { response?: { status?: number; statusText?: string; data?: unknown } };
       console.error("Response status:", axiosError.response?.status);
       console.error("Response data:", axiosError.response?.data);
     }
@@ -122,7 +123,7 @@ export async function GET(_request: NextRequest) {
     let statusCode = 500;
 
     if (error && typeof error === 'object' && 'response' in error) {
-      const axiosError = error as { response?: { status?: number; statusText?: string; data?: any } };
+      const axiosError = error as { response?: { status?: number; statusText?: string; data?: unknown } };
       if (axiosError.response?.status === 402) {
         errorMessage = "Search API requires a paid Neynar plan. Current API key has limited access.";
         statusCode = 402;
