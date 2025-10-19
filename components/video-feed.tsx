@@ -95,7 +95,7 @@ export function VideoFeed() {
   const handleRecast = (video: Video) => {
     // Use Minikit's composeCast to recast the video
     composeCast({
-      text: `Check out this video by @${video.username}! #clipchain`,
+      text: `Check out this #clipchain video!`,
       embeds: video.castUrl ? [video.castUrl] : [],
     })
   }
