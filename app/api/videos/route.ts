@@ -65,12 +65,17 @@ export async function GET(_request: NextRequest) {
       const author = cast.author;
       const castUrl = `https://warpcast.com/${author.username}/${cast.hash.slice(0, 10)}`;
 
+      // Remove URLs from description to keep UI clean
+      let cleanDescription = cast.text || "";
+      // Remove all URLs (http/https)
+      cleanDescription = cleanDescription.replace(/https?:\/\/[^\s]+/g, '').trim();
+
       videos.push({
         id: cast.hash,
         username: author.username,
         fid: author.fid,
         avatar: author.pfp_url || "/placeholder.svg",
-        description: cast.text || "",
+        description: cleanDescription,
         likes: cast.reactions.likes_count || 0,
         comments: cast.replies?.count || 0,
         shares: cast.reactions.recasts_count || 0,
