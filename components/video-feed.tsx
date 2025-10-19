@@ -100,8 +100,8 @@ export function VideoFeed() {
     })
   }
 
-  const handleSendToGroups = (video: Video) => {
-    // Use composeCast to share to groups/channels
+  const handleShare = (video: Video) => {
+    // Use composeCast to share the video - user can choose where (timeline, channel, etc.)
     composeCast({
       text: `Check out this AI video! #clipchain`,
       embeds: [video.videoUrl],
@@ -197,13 +197,13 @@ export function VideoFeed() {
                 </button>
 
                 <button
-                  onClick={() => handleSendToGroups(video)}
+                  onClick={() => handleShare(video)}
                   className="flex flex-col items-center gap-1 transition-transform active:scale-90"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30">
                     <Send className="h-6 w-6 text-white" />
                   </div>
-                  <span className="text-xs font-semibold text-white">Send</span>
+                  <span className="text-xs font-semibold text-white">Share</span>
                 </button>
               </div>
             </div>
