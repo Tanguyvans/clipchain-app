@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Repeat, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useComposeCast } from "@coinbase/onchainkit/minikit"
+import sdk from "@farcaster/miniapp-sdk"
 
 export interface Video {
   id: string
@@ -61,7 +61,6 @@ export function VideoFeed() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { composeCast } = useComposeCast()
 
   // Fetch videos from API
   useEffect(() => {
@@ -92,12 +91,16 @@ export function VideoFeed() {
     fetchVideos()
   }, [])
 
-  const handleRecast = (video: Video) => {
-    // Use Minikit's composeCast to recast the video
-    composeCast({
-      text: `Check out this #clipchain video!`,
-      embeds: video.castUrl ? [video.castUrl] : [],
-    })
+  const handleRecast = async (video: Video) => {
+    // Use Farcaster SDK directly for better compatibility with Coinbase app
+    try {
+      await sdk.actions.composeCast({
+        text: `Check out this #clipchain video!`,
+        embeds: video.castUrl ? [video.castUrl] : [],
+      })
+    } catch (error) {
+      console.error("Error composing cast:", error)
+    }
   }
 
   const formatCount = (count: number) => {
