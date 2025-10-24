@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Sparkles } from "lucide-react"
+import { X } from "lucide-react"
 import { useState } from "react"
 
 interface CreateModalProps {
@@ -50,7 +50,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     }, 300)
   }
 
-  const handleTemplateClick = (template: string) => {
+  const handleTemplateClick = (template: { emoji: string; label: string }) => {
     const prompts: Record<string, string> = {
       "🌃 Cyberpunk": "A futuristic neon-lit cyberpunk city at night with flying cars and holographic billboards",
       "🎬 Movie Scene": "A cinematic movie scene with dramatic lighting and camera angles",

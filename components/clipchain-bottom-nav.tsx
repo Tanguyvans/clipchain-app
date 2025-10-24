@@ -3,12 +3,10 @@
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Home, Search, Plus, Trophy, User } from "lucide-react"
-import { useState } from "react"
 
 export function ClipChainBottomNav() {
   const pathname = usePathname()
   const router = useRouter()
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const navItems = [
     {
@@ -45,7 +43,6 @@ export function ClipChainBottomNav() {
   ]
 
   const handleCreateClick = () => {
-    setShowCreateModal(true)
     router.push("/create")
   }
 

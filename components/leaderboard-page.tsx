@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp, CheckCircle2, ArrowRight } from "lucide-react"
+import { CheckCircle2, ArrowRight } from "lucide-react"
 import { useState } from "react"
 import type { LeaderboardEntry } from "@/types/clipchain"
 

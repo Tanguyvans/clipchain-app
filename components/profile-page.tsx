@@ -11,6 +11,13 @@ interface ProfilePageProps {
   videos?: VideoData[]
 }
 
+interface VideoGridItem {
+  id: string
+  videoUrl: string
+  views: number
+  duration: string
+}
+
 export function ProfilePage({
   username = "tanguyvans",
   avatar,
@@ -26,14 +33,21 @@ export function ProfilePage({
     { label: "Earned", value: "$0.02", color: "text-green-500" },
   ]
 
-  const mockVideos = videos.length > 0 ? videos : [
-    { id: "1", videoUrl: "", views: 1200, duration: "0:08" },
-    { id: "2", videoUrl: "", views: 890, duration: "0:10" },
-    { id: "3", videoUrl: "", views: 2300, duration: "0:05" },
-    { id: "4", videoUrl: "", views: 456, duration: "0:12" },
-    { id: "5", videoUrl: "", views: 1800, duration: "0:09" },
-    { id: "6", videoUrl: "", views: 670, duration: "0:15" },
-  ]
+  const mockVideos: VideoGridItem[] = videos.length > 0
+    ? videos.map(v => ({
+        id: v.id,
+        videoUrl: v.videoUrl,
+        views: v.likes || 0,
+        duration: "0:10"
+      }))
+    : [
+        { id: "1", videoUrl: "", views: 1200, duration: "0:08" },
+        { id: "2", videoUrl: "", views: 890, duration: "0:10" },
+        { id: "3", videoUrl: "", views: 2300, duration: "0:05" },
+        { id: "4", videoUrl: "", views: 456, duration: "0:12" },
+        { id: "5", videoUrl: "", views: 1800, duration: "0:09" },
+        { id: "6", videoUrl: "", views: 670, duration: "0:15" },
+      ]
 
   const gradients = [
     "bg-gradient-to-br from-purple-600 to-blue-600",
@@ -114,12 +128,12 @@ export function ProfilePage({
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-800 px-6 pb-4">
         {["My Videos", "Saved", "Remixes"].map((tab) => {
-          const tabKey = tab.toLowerCase().replace(" ", "") as "videos" | "saved" | "remixes"
-          const isActive = activeTab === tabKey.replace("my", "")
+          const tabKey = tab.toLowerCase().replace(" ", "").replace("my", "") as "videos" | "saved" | "remixes"
+          const isActive = activeTab === tabKey
           return (
             <button
               key={tab}
-              onClick={() => setActiveTab(tabKey.replace("my", "") as any)}
+              onClick={() => setActiveTab(tabKey)}
               className={`pb-3 text-sm font-semibold transition-colors ${
                 isActive
                   ? "border-b-2 border-orange-500 text-white"

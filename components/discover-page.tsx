@@ -2,7 +2,7 @@
 
 import { Search, TrendingUp, Play, UserPlus } from "lucide-react"
 import { useState } from "react"
-import type { VideoData, Creator, Template } from "@/types/clipchain"
+import type { Creator, Template } from "@/types/clipchain"
 
 export function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -142,7 +142,7 @@ export function DiscoverPage() {
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setActiveCategory(cat.toLowerCase() as any)}
+            onClick={() => setActiveCategory(cat.toLowerCase() as "videos" | "creators" | "templates")}
             className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
               activeCategory === cat.toLowerCase()
                 ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
