@@ -60,10 +60,10 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
         </div>
 
         {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
 
         {/* Top Left - User Info */}
-        <div className="absolute top-6 left-6 z-10 flex items-center gap-3">
+        <div className="absolute top-6 left-6 z-20 flex items-center gap-3">
           <img
             src={video.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${video.username}`}
             alt={video.username}
@@ -71,17 +71,17 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
           />
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-white">{video.username}</span>
+              <span className="text-base font-bold text-white drop-shadow-lg">{video.username}</span>
               {video.verified && (
                 <CheckCircle2 className="h-4 w-4 fill-purple-500 text-white" />
               )}
             </div>
-            <span className="text-xs text-gray-300">{video.timestamp || "2h ago"}</span>
+            <span className="text-xs text-gray-300 drop-shadow-lg">{video.timestamp || "2h ago"}</span>
           </div>
         </div>
 
         {/* Bottom Caption Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black via-black/90 to-transparent p-6 pt-20">
+        <div className="absolute bottom-0 left-0 right-20 z-10 p-6 pb-24">
           <p className="mb-2 line-clamp-2 text-base font-medium text-white">
             {video.description}
           </p>
@@ -106,11 +106,11 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
         </div>
 
         {/* Right Side Action Buttons */}
-        <div className="absolute right-4 bottom-36 z-20 flex flex-col gap-4">
+        <div className="absolute right-3 bottom-32 z-20 flex flex-col gap-3">
           {/* Like Button */}
           <button
             onClick={() => setLiked(!liked)}
-            className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
+            className={`flex h-11 w-11 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
               liked
                 ? "border-red-500 bg-red-500/20"
                 : "border-white/10 bg-black/40 hover:scale-110"
@@ -118,9 +118,9 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
             aria-label="Like"
           >
             <Heart
-              className={`h-5 w-5 ${liked ? "fill-red-500 text-red-500" : "text-white"}`}
+              className={`h-[18px] w-[18px] ${liked ? "fill-red-500 text-red-500" : "text-white"}`}
             />
-            <span className="mt-0.5 text-[10px] font-bold text-white">
+            <span className="text-[9px] font-bold text-white">
               {(liked ? video.likes + 1 : video.likes) >= 1000
                 ? `${((liked ? video.likes + 1 : video.likes) / 1000).toFixed(1)}K`
                 : liked ? video.likes + 1 : video.likes}
@@ -130,7 +130,7 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
           {/* Recast Button */}
           <button
             onClick={() => setRecasted(!recasted)}
-            className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
+            className={`flex h-11 w-11 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
               recasted
                 ? "border-green-500 bg-green-500/20"
                 : "border-white/10 bg-black/40 hover:scale-110"
@@ -138,39 +138,38 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
             aria-label="Recast"
           >
             <Repeat2
-              className={`h-5 w-5 ${recasted ? "text-green-500" : "text-white"}`}
+              className={`h-[18px] w-[18px] ${recasted ? "text-green-500" : "text-white"}`}
             />
-            <span className="mt-0.5 text-[10px] font-bold text-white">
+            <span className="text-[9px] font-bold text-white">
               {recasted ? video.shares + 1 : video.shares}
             </span>
           </button>
 
           {/* Comment Button */}
           <button
-            className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
+            className="flex h-11 w-11 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
             aria-label="Comment"
           >
-            <MessageCircle className="h-5 w-5 text-white" />
-            <span className="mt-0.5 text-[10px] font-bold text-white">{video.comments}</span>
+            <MessageCircle className="h-[18px] w-[18px] text-white" />
+            <span className="text-[9px] font-bold text-white">{video.comments}</span>
           </button>
 
           {/* Share Button */}
           <button
-            className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
+            className="flex h-11 w-11 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
             aria-label="Share"
           >
-            <Share2 className="h-5 w-5 text-white" />
+            <Share2 className="h-[18px] w-[18px] text-white" />
+          </button>
+
+          {/* Generate Button */}
+          <button
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg shadow-orange-500/50 transition-all hover:scale-110 active:scale-95"
+            aria-label="Generate similar"
+          >
+            <Sparkles className="h-[18px] w-[18px] text-white" />
           </button>
         </div>
-
-        {/* Generate Button */}
-        <button
-          className="absolute bottom-28 right-4 z-20 flex items-center gap-1.5 rounded-full border border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 shadow-lg shadow-orange-500/40 transition-all hover:scale-105 active:scale-95"
-          aria-label="Generate similar"
-        >
-          <Sparkles className="h-4 w-4 text-white" />
-          <span className="text-sm font-bold text-white">Generate</span>
-        </button>
       </div>
     </div>
   )
