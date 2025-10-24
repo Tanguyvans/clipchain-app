@@ -106,11 +106,11 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
         </div>
 
         {/* Right Side Action Buttons */}
-        <div className="absolute right-4 bottom-36 z-20 flex flex-col gap-6">
+        <div className="absolute right-4 bottom-36 z-20 flex flex-col gap-4">
           {/* Like Button */}
           <button
             onClick={() => setLiked(!liked)}
-            className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
+            className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
               liked
                 ? "border-red-500 bg-red-500/20"
                 : "border-white/10 bg-black/40 hover:scale-110"
@@ -118,9 +118,9 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
             aria-label="Like"
           >
             <Heart
-              className={`h-6 w-6 ${liked ? "fill-red-500 text-red-500" : "text-white"}`}
+              className={`h-5 w-5 ${liked ? "fill-red-500 text-red-500" : "text-white"}`}
             />
-            <span className="mt-1 text-xs font-bold text-white">
+            <span className="mt-0.5 text-[10px] font-bold text-white">
               {(liked ? video.likes + 1 : video.likes) >= 1000
                 ? `${((liked ? video.likes + 1 : video.likes) / 1000).toFixed(1)}K`
                 : liked ? video.likes + 1 : video.likes}
@@ -130,7 +130,7 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
           {/* Recast Button */}
           <button
             onClick={() => setRecasted(!recasted)}
-            className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
+            className={`flex h-12 w-12 flex-col items-center justify-center rounded-full border backdrop-blur-md transition-all ${
               recasted
                 ? "border-green-500 bg-green-500/20"
                 : "border-white/10 bg-black/40 hover:scale-110"
@@ -138,38 +138,38 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
             aria-label="Recast"
           >
             <Repeat2
-              className={`h-6 w-6 ${recasted ? "text-green-500" : "text-white"}`}
+              className={`h-5 w-5 ${recasted ? "text-green-500" : "text-white"}`}
             />
-            <span className="mt-1 text-xs font-bold text-white">
+            <span className="mt-0.5 text-[10px] font-bold text-white">
               {recasted ? video.shares + 1 : video.shares}
             </span>
           </button>
 
           {/* Comment Button */}
           <button
-            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
+            className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
             aria-label="Comment"
           >
-            <MessageCircle className="h-6 w-6 text-white" />
-            <span className="mt-1 text-xs font-bold text-white">{video.comments}</span>
+            <MessageCircle className="h-5 w-5 text-white" />
+            <span className="mt-0.5 text-[10px] font-bold text-white">{video.comments}</span>
           </button>
 
           {/* Share Button */}
           <button
-            className="flex h-14 w-14 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
+            className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-white/10 bg-black/40 backdrop-blur-md transition-all hover:scale-110"
             aria-label="Share"
           >
-            <Share2 className="h-6 w-6 text-white" />
+            <Share2 className="h-5 w-5 text-white" />
           </button>
         </div>
 
         {/* Generate Button */}
         <button
-          className="absolute bottom-28 right-6 z-20 flex min-w-[140px] items-center gap-2 rounded-full border-2 border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-xl shadow-orange-500/50 transition-all hover:scale-105 active:scale-95"
+          className="absolute bottom-28 right-4 z-20 flex items-center gap-1.5 rounded-full border border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2.5 shadow-lg shadow-orange-500/40 transition-all hover:scale-105 active:scale-95"
           aria-label="Generate similar"
         >
-          <Sparkles className="h-5 w-5 text-white" />
-          <span className="text-base font-bold text-white">Generate</span>
+          <Sparkles className="h-4 w-4 text-white" />
+          <span className="text-sm font-bold text-white">Generate</span>
         </button>
       </div>
     </div>
