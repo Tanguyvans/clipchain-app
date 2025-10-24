@@ -106,7 +106,7 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
         </div>
 
         {/* Right Side Action Buttons */}
-        <div className="absolute right-4 bottom-32 z-20 flex flex-col gap-6">
+        <div className="absolute right-4 bottom-36 z-20 flex flex-col gap-6">
           {/* Like Button */}
           <button
             onClick={() => setLiked(!liked)}
@@ -165,7 +165,7 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
 
         {/* Generate Button */}
         <button
-          className="absolute bottom-6 right-6 z-20 flex min-w-[140px] items-center gap-2 rounded-full border-2 border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-xl shadow-orange-500/50 transition-all hover:scale-105 active:scale-95"
+          className="absolute bottom-28 right-6 z-20 flex min-w-[140px] items-center gap-2 rounded-full border-2 border-orange-400/50 bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 shadow-xl shadow-orange-500/50 transition-all hover:scale-105 active:scale-95"
           aria-label="Generate similar"
         >
           <Sparkles className="h-5 w-5 text-white" />
