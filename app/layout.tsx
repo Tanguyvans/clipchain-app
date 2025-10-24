@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import { SafeArea } from "@coinbase/onchainkit/minikit";
 import { minikitConfig } from "../minikit.config";
 import { RootProvider } from "./rootProvider";
-import { BottomNav } from "@/components/bottom-nav";
+import { ClipChainBottomNav } from "@/components/clipchain-bottom-nav";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -42,7 +42,7 @@ export default function RootLayout({
         <body className={`${inter.variable} font-sans antialiased`}>
           <SafeArea>
             {children}
-            <BottomNav />
+            <ClipChainBottomNav />
           </SafeArea>
         </body>
       </html>

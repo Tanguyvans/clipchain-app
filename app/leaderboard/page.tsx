@@ -1,9 +1,9 @@
 "use client";
 import { useEffect } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
-import { Leaderboard } from "@/components/leaderboard";
+import { LeaderboardPage } from "@/components/leaderboard-page";
 
-export default function LeaderboardPage() {
+export default function Leaderboard() {
   const { isFrameReady, setFrameReady } = useMiniKit();
 
   useEffect(() => {
@@ -12,5 +12,5 @@ export default function LeaderboardPage() {
     }
   }, [setFrameReady, isFrameReady]);
 
-  return <Leaderboard />;
+  return <LeaderboardPage />;
 }
