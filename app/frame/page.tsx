@@ -3,11 +3,12 @@ import { Metadata } from "next";
 import { Loader2 } from "lucide-react";
 
 type Props = {
-  searchParams: { video?: string };
+  searchParams: Promise<{ video?: string }>;
 };
 
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
-  const videoUrl = searchParams.video ? decodeURIComponent(searchParams.video) : "";
+  const params = await searchParams;
+  const videoUrl = params.video ? decodeURIComponent(params.video) : "";
 
   if (!videoUrl) {
     return {
@@ -62,8 +63,9 @@ function FrameContent({ videoUrl }: { videoUrl: string }) {
   );
 }
 
-export default function FramePage({ searchParams }: Props) {
-  const videoUrl = searchParams.video ? decodeURIComponent(searchParams.video) : "";
+export default async function FramePage({ searchParams }: Props) {
+  const params = await searchParams;
+  const videoUrl = params.video ? decodeURIComponent(params.video) : "";
 
   return (
     <Suspense
