@@ -56,13 +56,15 @@ export async function POST(request: NextRequest) {
     console.log("✅ Fal AI Sora 2 result:", JSON.stringify(result, null, 2));
 
     // Extract video URL from result
-    const resultData = result as { data?: { video?: { url?: string } } };
-    const videoUrl = resultData.data?.video?.url;
+    // Fal AI returns: { data: { video: { url: "..." } } }
+    const resultData = result as any;
+    let videoUrl = resultData.data?.video?.url || resultData.video?.url || resultData.data?.url;
 
     console.log("🎥 Extracted video URL:", videoUrl);
 
     if (!videoUrl) {
       console.error("❌ No video URL found in response:", result);
+      console.error("Full result structure:", JSON.stringify(result, null, 2));
       throw new Error("No video URL in Fal AI response");
     }
 
