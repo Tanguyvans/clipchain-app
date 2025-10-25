@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         prompt: prompt,
       },
       logs: true,
-      onQueueUpdate: (update: any) => {
+      onQueueUpdate: (update) => {
         if (update.status === "IN_PROGRESS") {
           console.log("Generation progress:", update.logs);
         }
@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     console.log("Fal AI result:", result);
 
     // Extract video URL from result
-    const videoUrl = result.data?.video?.url;
+    const resultData = result as { data?: { video?: { url?: string } } };
+    const videoUrl = resultData.data?.video?.url;
 
     if (!videoUrl) {
       throw new Error("No video URL in Fal AI response");
