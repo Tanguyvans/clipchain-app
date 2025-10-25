@@ -3,6 +3,7 @@
 import { ProfilePage } from "@/components/profile-page"
 import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
 
 interface VideoGridItem {
   id: string
@@ -27,6 +28,7 @@ interface UserData {
 }
 
 export default function Profile() {
+  const { walletAddress, userData: authUserData } = useAuth()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -34,13 +36,31 @@ export default function Profile() {
     const fetchUserProfile = async () => {
       setIsLoading(true)
       try {
-        // TODO: Get actual logged-in user's FID or username
-        // For now, using tanguyvans as default
-        const response = await fetch("/api/user?username=tanguyvans")
+        let queryParam = ""
+
+        // Try to use wallet address first (from Base app)
+        if (walletAddress) {
+          queryParam = `address=${walletAddress}`
+          console.log("Fetching profile by wallet address:", walletAddress)
+        }
+        // Fallback to username from auth context
+        else if (authUserData?.username) {
+          queryParam = `username=${authUserData.username}`
+          console.log("Fetching profile by username:", authUserData.username)
+        }
+        // Last resort: use default username
+        else {
+          queryParam = "username=tanguyvans"
+          console.log("Using default username: tanguyvans")
+        }
+
+        const response = await fetch(`/api/user?${queryParam}`)
         const data = await response.json()
 
         if (data.success && data.user) {
           setUserData(data.user)
+        } else {
+          console.error("Failed to fetch user:", data.error)
         }
       } catch (error) {
         console.error("Error fetching user profile:", error)
@@ -50,7 +70,7 @@ export default function Profile() {
     }
 
     fetchUserProfile()
-  }, [])
+  }, [walletAddress, authUserData])
 
   if (isLoading) {
     return (

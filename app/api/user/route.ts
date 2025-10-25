@@ -13,12 +13,13 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const fid = searchParams.get("fid");
     const username = searchParams.get("username");
+    const address = searchParams.get("address");
 
-    if (!fid && !username) {
+    if (!fid && !username && !address) {
       return NextResponse.json(
         {
           success: false,
-          error: "Either fid or username is required",
+          error: "Either fid, username, or address is required",
         },
         { status: 400 }
       );
@@ -27,15 +28,47 @@ export async function GET(request: NextRequest) {
     let userData: User | undefined;
     let userCasts: Cast[] = [];
 
-    if (fid) {
+    if (address) {
+      // Fetch user by wallet address (ETH or SOL)
+      try {
+        const response = await client.fetchBulkUsersByEthOrSolAddress({
+          addresses: [address]
+        });
+        // The response contains a map of addresses to users
+        userData = Object.values(response)[0] as unknown as User;
+        console.log("Fetched user by address:", userData?.username, "FID:", userData?.fid);
+      } catch (err) {
+        console.error("Error looking up user by address:", err);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No Farcaster user found for address ${address}`,
+          },
+          { status: 404 }
+        );
+      }
+    } else if (fid) {
       // Fetch user by FID
       const response = await client.fetchBulkUsers({ fids: [parseInt(fid)] });
       userData = response.users[0];
+      console.log("Fetched user by FID:", userData?.username);
     } else if (username) {
       // Fetch user by username
-      const response = await client.lookupUserByUsername({ username });
-      // Extract user from response - lookupUserByUsername returns the user directly
-      userData = response as unknown as User;
+      try {
+        const response = await client.lookupUserByUsername({ username });
+        // Extract user from response - lookupUserByUsername returns the user directly
+        userData = response as unknown as User;
+        console.log("Fetched user by username:", userData?.username, "FID:", userData?.fid);
+      } catch (err) {
+        console.error("Error looking up user by username:", err);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `User @${username} not found on Farcaster`,
+          },
+          { status: 404 }
+        );
+      }
     }
 
     if (!userData) {
@@ -100,7 +133,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Return formatted user data
-    return NextResponse.json({
+    const responseData = {
       success: true,
       user: {
         fid: userData.fid,
@@ -115,7 +148,16 @@ export async function GET(request: NextRequest) {
         recastCount: totalRecasts,
         videos,
       },
+    };
+
+    console.log("Returning user data:", {
+      username: responseData.user.username,
+      fid: responseData.user.fid,
+      avatar: responseData.user.avatar,
+      videoCount: responseData.user.videoCount
     });
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error fetching user:", error);
 

@@ -92,8 +92,12 @@ export function ProfilePage({
           <div className="relative h-28 w-28 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
             <img
               src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
-              alt={username}
-              className="h-full w-full rounded-full border-2 border-[#0A0A0A]"
+              alt={displayName || username}
+              className="h-full w-full rounded-full border-2 border-[#0A0A0A] object-cover"
+              onError={(e) => {
+                // Fallback to dicebear if avatar fails to load
+                e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+              }}
             />
           </div>
         </div>
@@ -175,13 +179,20 @@ export function ProfilePage({
               className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-lg"
             >
               <div className={`h-full w-full ${gradients[index % gradients.length]}`}>
-                {video.videoUrl && (
-                  <img
+                {video.videoUrl ? (
+                  <video
                     src={video.videoUrl}
-                    alt="Video thumbnail"
                     className="h-full w-full object-cover"
+                    muted
+                    loop
+                    playsInline
+                    onMouseEnter={(e) => e.currentTarget.play()}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.pause()
+                      e.currentTarget.currentTime = 0
+                    }}
                   />
-                )}
+                ) : null}
               </div>
 
               {/* Hover Overlay */}
