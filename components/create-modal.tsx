@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useAccount, useConnect } from "wagmi"
 
 interface CreateModalProps {
   isOpen: boolean
@@ -22,6 +23,8 @@ const GENERATION_COST = "250000"
 
 export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const router = useRouter()
+  const { isConnected, address } = useAccount()
+  const { connect, connectors } = useConnect()
   const [prompt, setPrompt] = useState("")
   const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -31,14 +34,23 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const durations: Duration[] = ["4", "8", "12"]
 
   useEffect(() => {
-    // Check if MiniKit SDK is available
+    // Check if MiniKit SDK is available and connect wallet
     const checkMiniKit = async () => {
       try {
         // Wait for context to be available
         const context = await sdk.context
         console.log("MiniKit context:", context)
+        console.log("Wallet connected:", isConnected)
+        console.log("Wallet address:", address)
+
         if (context && sdk.actions) {
           setIsMiniKitReady(true)
+
+          // Auto-connect wallet if not connected
+          if (!isConnected && connectors.length > 0) {
+            console.log("Auto-connecting wallet...")
+            connect({ connector: connectors[0] })
+          }
         }
       } catch (error) {
         console.error("MiniKit not available:", error)
@@ -46,7 +58,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       }
     }
     checkMiniKit()
-  }, [])
+  }, [isConnected, address, connectors, connect])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -62,41 +74,69 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
 
       let transactionHash = "dev_tx_" + Date.now()
 
-      // Only try payment if MiniKit is ready and not in dev mode bypass
+      // Only try payment if MiniKit is ready
       if (isMiniKitReady && sdk?.actions) {
-        setStep("payment")
+        // Ensure wallet is connected first
+        if (!isConnected) {
+          console.log("Wallet not connected, attempting to connect...")
+          toast.info("Connecting wallet...")
 
-        // Request payment via MiniKit sendToken
-        toast.info("Opening payment...")
+          if (connectors.length > 0) {
+            try {
+              connect({ connector: connectors[0] })
+              // Wait for connection to complete
+              await new Promise(resolve => setTimeout(resolve, 1500))
+            } catch (connectError) {
+              console.error("Wallet connection failed:", connectError)
 
-        try {
-          const paymentResult = await sdk.actions.sendToken({
-            token: BASE_USDC_TOKEN,
-            amount: GENERATION_COST,
-            recipientAddress: RECIPIENT_WALLET,
-          })
-
-          console.log("Payment result:", paymentResult)
-
-          if (!paymentResult.success) {
-            toast.error("Payment cancelled or failed")
-            setIsGenerating(false)
-            setStep("prompt")
-            return
+              // In development, allow bypassing wallet connection
+              if (isDevelopment) {
+                toast.warning("Wallet connection failed - continuing in dev mode")
+              } else {
+                toast.error("Please connect your wallet to continue")
+                setIsGenerating(false)
+                return
+              }
+            }
           }
+        }
 
-          // Get transaction hash
-          transactionHash = paymentResult.send.transaction
-          toast.success("Payment confirmed! Generating video...")
-        } catch (paymentError) {
-          console.error("Payment error:", paymentError)
+        // If wallet is connected (or dev mode), attempt payment
+        if (isConnected || isDevelopment) {
+          setStep("payment")
 
-          // If payment fails in dev mode, show option to continue anyway
-          if (isDevelopment) {
-            toast.error("Payment failed - continuing in dev mode")
-            transactionHash = "dev_tx_" + Date.now()
-          } else {
-            throw new Error("Payment failed. Please try again or contact support.")
+          // Request payment via MiniKit sendToken
+          toast.info("Opening payment...")
+
+          try {
+            const paymentResult = await sdk.actions.sendToken({
+              token: BASE_USDC_TOKEN,
+              amount: GENERATION_COST,
+              recipientAddress: RECIPIENT_WALLET,
+            })
+
+            console.log("Payment result:", paymentResult)
+
+            if (!paymentResult.success) {
+              toast.error("Payment cancelled or failed")
+              setIsGenerating(false)
+              setStep("prompt")
+              return
+            }
+
+            // Get transaction hash
+            transactionHash = paymentResult.send.transaction
+            toast.success("Payment confirmed! Generating video...")
+          } catch (paymentError) {
+            console.error("Payment error:", paymentError)
+
+            // If payment fails in dev mode, show option to continue anyway
+            if (isDevelopment) {
+              toast.warning("Payment failed - continuing in dev mode")
+              transactionHash = "dev_tx_" + Date.now()
+            } else {
+              throw new Error("Payment failed. Please try again or contact support.")
+            }
           }
         }
       } else if (isDevelopment) {
