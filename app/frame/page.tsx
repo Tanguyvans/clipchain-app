@@ -17,23 +17,38 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     };
   }
 
+  // Generate a thumbnail image URL
+  const baseUrl = process.env.NEXT_PUBLIC_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "")
+    || "http://localhost:3000";
+
+  const thumbnailUrl = `${baseUrl}/api/og?text=${encodeURIComponent("ClipChain AI Video")}`;
+
   return {
     title: "ClipChain Video",
     description: "AI-generated video on ClipChain 🎬✨",
     openGraph: {
       title: "ClipChain Video",
       description: "AI-generated video on ClipChain 🎬✨",
-      images: [videoUrl], // Fallback image (will use first frame of video)
+      images: [thumbnailUrl],
+      videos: [
+        {
+          url: videoUrl,
+          type: "video/mp4",
+        }
+      ],
     },
     other: {
-      // Farcaster Frame video tags
+      // Farcaster Frame video tags (try MP4)
       "fc:frame": "vNext",
       "fc:frame:video": videoUrl,
       "fc:frame:video:type": "video/mp4",
-      "fc:frame:image": videoUrl, // Fallback image
-      "og:image": videoUrl, // Fallback for OpenGraph
+      "fc:frame:image": thumbnailUrl, // Fallback image
+      "og:image": thumbnailUrl,
       "og:video": videoUrl,
       "og:video:type": "video/mp4",
+      "og:video:width": "720",
+      "og:video:height": "1280",
     },
   };
 }

@@ -208,6 +208,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       }
 
       const frameData = await frameResponse.json();
+      console.log("Frame URL:", frameData.frameUrl);
 
       // Use MiniKit to open compose dialog with frame URL
       if (sdk?.actions?.composeCast) {
@@ -217,7 +218,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
 
         await sdk.actions.composeCast({
           text: castText,
-          embeds: [frameData.frameUrl], // Use frame URL with proper meta tags
+          embeds: [frameData.frameUrl], // Frame URL with video meta tags
           channelKey: "clipchain",
         });
 
