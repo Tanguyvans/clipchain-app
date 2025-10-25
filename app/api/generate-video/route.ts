@@ -8,6 +8,15 @@ fal.config({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if FAL_KEY is loaded
+    if (!process.env.FAL_KEY) {
+      console.error("❌ FAL_KEY environment variable is not set!");
+      return NextResponse.json(
+        { success: false, error: "Server configuration error: FAL_KEY not found" },
+        { status: 500 }
+      );
+    }
+
     const { prompt, duration, transactionHash } = await request.json();
 
     if (!prompt || typeof prompt !== "string") {
@@ -20,11 +29,15 @@ export async function POST(request: NextRequest) {
     // Validate duration
     const validDuration = duration && [4, 8, 12].includes(duration) ? duration : 4;
 
-    console.log("Generating video for prompt:", prompt);
-    console.log("Duration:", validDuration, "seconds");
-    console.log("Payment transaction:", transactionHash);
+    console.log("=== 🎬 VIDEO GENERATION REQUEST ===");
+    console.log("📝 Prompt:", prompt);
+    console.log("⏱️  Duration:", validDuration, "seconds");
+    console.log("💳 Transaction:", transactionHash);
+    console.log("🔑 FAL_KEY present:", !!process.env.FAL_KEY);
 
     // Generate video using Fal AI Sora 2
+    console.log("🚀 Starting Fal AI generation...");
+
     const result = await fal.subscribe("fal-ai/sora-2/text-to-video", {
       input: {
         prompt: prompt,
@@ -35,18 +48,21 @@ export async function POST(request: NextRequest) {
       logs: true,
       onQueueUpdate: (update) => {
         if (update.status === "IN_PROGRESS") {
-          console.log("Generation progress:", update.logs);
+          console.log("⏳ Generation progress:", update.logs);
         }
       },
     });
 
-    console.log("Fal AI Sora 2 result:", result);
+    console.log("✅ Fal AI Sora 2 result:", JSON.stringify(result, null, 2));
 
     // Extract video URL from result
     const resultData = result as { data?: { video?: { url?: string } } };
     const videoUrl = resultData.data?.video?.url;
 
+    console.log("🎥 Extracted video URL:", videoUrl);
+
     if (!videoUrl) {
+      console.error("❌ No video URL found in response:", result);
       throw new Error("No video URL in Fal AI response");
     }
 
@@ -63,11 +79,19 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("Video generation error:", error);
+    console.error("❌ Video generation error:", error);
+
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Video generation failed"
+        error: error instanceof Error ? error.message : "Video generation failed",
+        details: error instanceof Error ? error.stack : String(error)
       },
       { status: 500 }
     );
