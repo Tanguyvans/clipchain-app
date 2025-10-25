@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NeynarAPIClient, Configuration } from "@neynar/nodejs-sdk";
-import { Cast, User } from "@neynar/nodejs-sdk/build/api";
+import { Cast, User, BulkUsersByAddressResponse } from "@neynar/nodejs-sdk/build/api";
 
 const apiKey = process.env.NEYNAR_API_KEY || "";
 const config = new Configuration({
@@ -34,9 +34,23 @@ export async function GET(request: NextRequest) {
         const response = await client.fetchBulkUsersByEthOrSolAddress({
           addresses: [address]
         });
-        // The response contains a map of addresses to users
-        userData = Object.values(response)[0] as unknown as User;
-        console.log("Fetched user by address:", userData?.username, "FID:", userData?.fid);
+        // The response is a map of addresses to arrays of users
+        const bulkResponse = response as unknown as BulkUsersByAddressResponse;
+        const addressKey = address.toLowerCase();
+        const users = bulkResponse[addressKey];
+
+        if (users && users.length > 0) {
+          userData = users[0];
+          console.log("Fetched user by address:", userData?.username, "FID:", userData?.fid);
+        } else {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `No Farcaster user found for address ${address}`,
+            },
+            { status: 404 }
+          );
+        }
       } catch (err) {
         console.error("Error looking up user by address:", err);
         return NextResponse.json(
@@ -56,8 +70,8 @@ export async function GET(request: NextRequest) {
       // Fetch user by username
       try {
         const response = await client.lookupUserByUsername({ username });
-        // Extract user from response - lookupUserByUsername returns the user directly
-        userData = response as unknown as User;
+        // Extract user from response - the SDK already handles the unwrapping
+        userData = response.user;
         console.log("Fetched user by username:", userData?.username, "FID:", userData?.fid);
       } catch (err) {
         console.error("Error looking up user by username:", err);
