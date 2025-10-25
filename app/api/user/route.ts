@@ -102,23 +102,23 @@ export async function GET(request: NextRequest) {
         limit: 100,
       });
 
-      // Filter for ClipChain videos (posted to /clipchain channel OR has video)
+      // Filter for ClipChain videos (ONLY from /clipchain channel)
       const allCasts = castsResponse.casts || [];
       console.log(`Total casts for @${userData.username}:`, allCasts.length);
 
       userCasts = allCasts.filter(cast => {
-        // Check if posted to clipchain channel
+        // Must be posted to clipchain channel
         const isInChannel = cast.channel?.id === "clipchain";
-        // Check if has video embed (either .mp4 or fal.media URL)
+        // And must have video embed
         const hasVideo = cast.embeds?.some(embed => {
           const embedUrl = "url" in embed ? embed.url : null;
           if (!embedUrl || typeof embedUrl !== "string") return false;
           return embedUrl.includes(".mp4") || embedUrl.includes("fal.media") || embedUrl.includes("video");
         });
 
-        const matches = isInChannel || hasVideo;
+        const matches = isInChannel && hasVideo;
         if (matches) {
-          console.log("Found video cast:", {
+          console.log("Found ClipChain video:", {
             hash: cast.hash,
             channel: cast.channel?.id,
             embeds: cast.embeds?.map(e => "url" in e ? e.url : null)

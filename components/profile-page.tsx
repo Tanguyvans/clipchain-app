@@ -112,9 +112,9 @@ export function ProfilePage({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-gray-800 bg-[#1A1A1A] p-4 text-center"
+            className="rounded-xl border border-gray-800 bg-[#1A1A1A] p-3 text-center"
           >
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-xs text-gray-400">{stat.label}</p>
           </div>
         ))}
@@ -122,9 +122,6 @@ export function ProfilePage({
 
       {/* Action Buttons */}
       <div className="flex gap-3 px-6 pb-6">
-        <button className="flex-1 rounded-xl border-2 border-purple-500/50 py-3 text-center font-semibold text-white transition-colors hover:bg-purple-500/10">
-          Edit Profile
-        </button>
         <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]">
           <Share2 className="h-5 w-5 text-white" />
         </button>
