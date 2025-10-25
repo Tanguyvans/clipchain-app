@@ -20,12 +20,22 @@ const GENERATION_COST = "250000";
 
 type Duration = "4" | "8" | "12";
 
+const quickStartPrompts = [
+  { label: "Cyberpunk", emoji: "🏙️", prompt: "A futuristic cyberpunk city at night with neon lights and flying cars" },
+  { label: "Movie Scene", emoji: "🎬", prompt: "A dramatic cinematic scene with emotional lighting and camera movements" },
+  { label: "Sci-Fi", emoji: "🚀", prompt: "A stunning sci-fi landscape with alien architecture and glowing elements" },
+];
+
 export default function GenerateVideoPage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
   const [duration, setDuration] = useState<Duration>("4");
   const [isGenerating, setIsGenerating] = useState(false);
   const [step, setStep] = useState<"prompt" | "payment" | "generating">("prompt");
+
+  const handleQuickStart = (quickPrompt: string) => {
+    setPrompt(quickPrompt);
+  };
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -91,43 +101,67 @@ export default function GenerateVideoPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0A0A0A] p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#0A0A0A] p-4 pb-24">
       <Card className="w-full max-w-md border-gray-800 bg-[#1A1A1A]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <Sparkles className="h-6 w-6 text-purple-500" />
             Generate Video
           </CardTitle>
+          <p className="text-sm text-gray-400">Transform your idea into AI video</p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="max-h-[70vh] space-y-4 overflow-y-auto">
           {step === "prompt" && (
             <>
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">
+                <label className="text-sm font-semibold text-white">
                   Describe your video
                 </label>
                 <Textarea
-                  placeholder="e.g., A cat riding a skateboard in space..."
+                  placeholder="e.g., A futuristic city at night with neon lights and flying cars..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[100px] border-gray-700 bg-[#0A0A0A] text-white"
+                  maxLength={500}
+                  className="min-h-[120px] border-gray-700 bg-[#0A0A0A] text-white placeholder:text-gray-600"
                   disabled={isGenerating}
                 />
+                <p className="text-right text-xs text-gray-500">{prompt.length}/500</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-gray-400">Duration</label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <span>⚡</span> Quick Start
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {quickStartPrompts.map((quick) => (
+                    <button
+                      key={quick.label}
+                      type="button"
+                      onClick={() => handleQuickStart(quick.prompt)}
+                      className="rounded-full border border-gray-700 bg-[#0A0A0A] px-4 py-2 text-sm text-gray-300 transition-all hover:border-purple-500 hover:bg-purple-500/10"
+                      disabled={isGenerating}
+                    >
+                      <span className="mr-1">{quick.emoji}</span>
+                      {quick.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-white">Duration</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(["4", "8", "12"] as Duration[]).map((d) => (
                     <button
                       key={d}
                       type="button"
                       onClick={() => setDuration(d)}
-                      className={`rounded-lg border-2 py-2 text-sm font-semibold transition-all ${
+                      className={`rounded-lg border-2 py-3 text-sm font-semibold transition-all ${
                         duration === d
                           ? "border-purple-500 bg-purple-500 text-white"
                           : "border-gray-700 bg-[#0A0A0A] text-gray-400 hover:border-gray-600"
                       }`}
+                      disabled={isGenerating}
                     >
                       {d}s
                     </button>
