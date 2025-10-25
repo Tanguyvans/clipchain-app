@@ -1,65 +1,96 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, Loader2 } from "lucide-react"
 import { useState } from "react"
+import { sdk } from "@farcaster/miniapp-sdk"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface CreateModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
+type Duration = "4" | "8" | "12"
+
+// Your ClipChain wallet address
+const RECIPIENT_WALLET = "0x2869B9D189a892181E02157f77411E312b9a6Ee6"
+// Base USDC token address
+const BASE_USDC_TOKEN = "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+// 0.25 USDC (6 decimals)
+const GENERATION_COST = "250000"
+
 export function CreateModal({ isOpen, onClose }: CreateModalProps) {
+  const router = useRouter()
   const [prompt, setPrompt] = useState("")
-  const [duration, setDuration] = useState("10s")
-  const [style, setStyle] = useState("Realistic")
+  const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [step, setStep] = useState<"prompt" | "payment" | "generating">("prompt")
 
-  const templates = [
-    { emoji: "🌃", label: "Cyberpunk" },
-    { emoji: "🎬", label: "Movie Scene" },
-    { emoji: "🔮", label: "Sci-Fi" },
-    { emoji: "🎨", label: "Abstract" },
-    { emoji: "🌊", label: "Nature" },
-    { emoji: "🏙️", label: "Urban" },
-  ]
-
-  const durations = ["5s", "10s", "15s"]
-  const styles = ["Realistic", "Anime", "Cinematic", "3D", "Artistic"]
+  const durations: Duration[] = ["4", "8", "12"]
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return
-
-    setIsGenerating(true)
-    setProgress(0)
-
-    // Simulate generation progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => {
-            setIsGenerating(false)
-            setProgress(0)
-            onClose()
-          }, 500)
-          return 100
-        }
-        return prev + 10
-      })
-    }, 300)
-  }
-
-  const handleTemplateClick = (template: { emoji: string; label: string }) => {
-    const prompts: Record<string, string> = {
-      "🌃 Cyberpunk": "A futuristic neon-lit cyberpunk city at night with flying cars and holographic billboards",
-      "🎬 Movie Scene": "A cinematic movie scene with dramatic lighting and camera angles",
-      "🔮 Sci-Fi": "A sci-fi landscape with advanced technology and alien environments",
-      "🎨 Abstract": "An abstract artistic composition with flowing colors and shapes",
-      "🌊 Nature": "A beautiful natural landscape with stunning scenery",
-      "🏙️ Urban": "A modern urban cityscape with skyscrapers and bustling streets",
+    if (!prompt.trim()) {
+      toast.error("Please enter a prompt")
+      return
     }
-    setPrompt(prompts[`${template.emoji} ${template.label}`] || "")
+
+    try {
+      setStep("payment")
+      setIsGenerating(true)
+
+      // Request payment via MiniKit sendToken
+      toast.info("Opening payment...")
+
+      const paymentResult = await sdk.actions.sendToken({
+        token: BASE_USDC_TOKEN,
+        amount: GENERATION_COST,
+        recipientAddress: RECIPIENT_WALLET,
+      })
+
+      if (!paymentResult.success) {
+        toast.error("Payment cancelled or failed")
+        setIsGenerating(false)
+        setStep("prompt")
+        return
+      }
+
+      // Payment successful!
+      toast.success("Payment confirmed! Generating video...")
+      setStep("generating")
+
+      // Call video generation API with duration
+      const response = await fetch("/api/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          duration: parseInt(duration),
+          transactionHash: paymentResult.send.transaction,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Video generation failed")
+      }
+
+      const data = await response.json()
+      const videoUrl = data.videoUrl
+
+      toast.success("Video generated!")
+
+      // Navigate to post-video page
+      router.push(
+        `/post-video?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(prompt)}`
+      )
+
+      onClose()
+    } catch (error) {
+      console.error("Generation error:", error)
+      toast.error("Failed to generate video")
+      setIsGenerating(false)
+      setStep("prompt")
+    }
   }
 
   if (!isOpen) return null
@@ -78,7 +109,6 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
           <h2 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
             ✨ Generate Video
           </h2>
-          <p className="mt-1 text-sm text-gray-400">Transform your idea into AI video</p>
           <button
             onClick={onClose}
             className="absolute right-6 top-4 rounded-full p-2 transition-colors hover:bg-gray-800"
@@ -90,113 +120,95 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Prompt Input */}
-          <div className="p-6">
-            <label className="mb-2 block font-semibold text-white">Describe your video</label>
-            <div className="relative">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
-                rows={5}
-                placeholder="A futuristic city at night with neon lights and flying cars..."
-                className="w-full rounded-xl border-2 border-gray-800 bg-[#1A1A1A] p-4 text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
-              />
-              <span className="absolute bottom-2 right-2 text-xs text-gray-500">
-                {prompt.length}/500
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Templates */}
-          <div className="px-6 pb-4">
-            <label className="mb-3 block font-semibold text-white">⚡ Quick Start</label>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-              {templates.map((template) => (
-                <button
-                  key={template.label}
-                  onClick={() => handleTemplateClick(template)}
-                  className="whitespace-nowrap rounded-full bg-[#1A1A1A] px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-gradient-to-r hover:from-purple-500 hover:to-blue-500"
-                >
-                  {template.emoji} {template.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Duration Selector */}
-          <div className="px-6 pb-4">
-            <label className="mb-2 block font-semibold text-white">Duration</label>
-            <div className="flex gap-2">
-              {durations.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDuration(d)}
-                  className={`flex-1 rounded-lg border-2 px-6 py-2 text-sm font-semibold transition-all ${
-                    duration === d
-                      ? "border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                      : "border-gray-700 text-gray-400 hover:border-gray-600"
-                  }`}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Style Selector */}
-          <div className="px-6 pb-4">
-            <label className="mb-2 block font-semibold text-white">Style</label>
-            <div className="flex flex-wrap gap-2">
-              {styles.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStyle(s)}
-                  className={`rounded-lg border-2 px-4 py-2 text-sm font-semibold transition-all ${
-                    style === s
-                      ? "border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                      : "border-gray-700 text-gray-400 hover:border-gray-600"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cost Card */}
-          <div className="mx-6 mb-4 rounded-xl border border-purple-500/20 bg-[#1A1A1A] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-400">Cost per video</p>
-                <p className="text-2xl font-bold text-orange-500">0.001 USDC</p>
+          {step === "prompt" && (
+            <>
+              {/* Prompt Input */}
+              <div className="p-6">
+                <label className="mb-2 block font-semibold text-white">Describe your video</label>
+                <div className="relative">
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
+                    rows={5}
+                    placeholder="A futuristic city at night with neon lights and flying cars..."
+                    className="w-full rounded-xl border-2 border-gray-800 bg-[#1A1A1A] p-4 text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                    disabled={isGenerating}
+                  />
+                  <span className="absolute bottom-2 right-2 text-xs text-gray-500">
+                    {prompt.length}/500
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-400">Balance: 0.05 USDC</p>
-                <p className="text-xs text-gray-500">49 videos left</p>
+
+              {/* Duration Selector */}
+              <div className="px-6 pb-4">
+                <label className="mb-2 block font-semibold text-white">Duration</label>
+                <div className="flex gap-2">
+                  {durations.map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDuration(d)}
+                      className={`flex-1 rounded-lg border-2 px-6 py-2 text-sm font-semibold transition-all ${
+                        duration === d
+                          ? "border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                          : "border-gray-700 text-gray-400 hover:border-gray-600"
+                      }`}
+                      disabled={isGenerating}
+                    >
+                      {d}s
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cost Card */}
+              <div className="mx-6 mb-4 rounded-xl border border-purple-500/20 bg-purple-500/10 p-4">
+                <p className="text-sm text-purple-300">
+                  💰 Cost: <span className="font-bold">0.25 USDC</span>
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Payment via Base network (low gas fees)
+                </p>
+              </div>
+            </>
+          )}
+
+          {step === "payment" && (
+            <div className="flex min-h-[400px] items-center justify-center">
+              <div className="space-y-4 text-center">
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-purple-500" />
+                <div>
+                  <p className="font-semibold text-white">Confirming Payment...</p>
+                  <p className="text-sm text-gray-400">
+                    Please confirm the transaction in your wallet
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {step === "generating" && (
+            <div className="flex min-h-[400px] items-center justify-center">
+              <div className="space-y-4 text-center">
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-purple-500" />
+                <div>
+                  <p className="font-semibold text-white">Generating Your Video...</p>
+                  <p className="text-sm text-gray-400">
+                    This may take 30-60 seconds
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer CTA */}
         <div className="border-t border-gray-800 px-6 pb-6 pt-4">
-          {isGenerating ? (
-            <div className="space-y-2">
-              <div className="h-14 overflow-hidden rounded-full bg-gray-800">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-center text-sm text-gray-400">
-                Generating... {progress}%
-              </p>
-            </div>
-          ) : (
+          {step === "prompt" && (
             <button
               onClick={handleGenerate}
-              disabled={!prompt.trim()}
-              className="h-14 w-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!prompt.trim() || isGenerating}
+              className="h-14 w-full rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-lg font-bold text-white shadow-xl shadow-purple-500/40 transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Generate Video ✨
             </button>
