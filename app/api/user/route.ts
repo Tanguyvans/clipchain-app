@@ -95,29 +95,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user's casts using searchCasts (same method as feed)
+    // Fetch user's casts - FASTEST method for user profiles
     try {
-      const searchResults = await client.searchCasts({
-        q: `from:${userData.username} #clipchain`,
+      const castsResponse = await client.fetchCastsForUser({
+        fid: userData.fid,
         limit: 100,
       });
-      userCasts = searchResults.result.casts || [];
-      console.log(`Found ${userCasts.length} casts for @${userData.username} with #clipchain`);
+
+      // Filter for ClipChain videos (posted to /clipchain channel)
+      const allCasts = castsResponse.casts || [];
+      userCasts = allCasts.filter(cast => {
+        // Check if posted to clipchain channel
+        const isInChannel = cast.channel?.id === "clipchain";
+        // Or check if has video embed
+        const hasVideo = cast.embeds?.some(embed => {
+          const embedUrl = "url" in embed ? embed.url : null;
+          return embedUrl && typeof embedUrl === "string" && embedUrl.includes(".mp4");
+        });
+        return isInChannel && hasVideo;
+      });
+
+      console.log(`Found ${userCasts.length} ClipChain videos for @${userData.username}`);
     } catch (err) {
       console.error("Error fetching user casts:", err);
       userCasts = [];
     }
 
-    // Filter for videos with #clipchain
+    // Map videos
     const videos = userCasts
-      .filter((cast) => {
-        const hasClipchainTag = cast.text?.toLowerCase().includes("clipchain");
-        const hasVideo = cast.embeds?.some((embed) => {
-          const embedUrl = "url" in embed ? embed.url : null;
-          return embedUrl && typeof embedUrl === "string" && embedUrl.includes(".mp4");
-        });
-        return hasClipchainTag && hasVideo;
-      })
       .map((cast) => {
         // Extract video URL
         let videoUrl = "";

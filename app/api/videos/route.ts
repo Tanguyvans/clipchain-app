@@ -24,18 +24,20 @@ export interface VideoData {
 
 export async function GET(_request: NextRequest) {
   try {
-    // Search for casts mentioning #clipchain
-    const searchResults = await client.searchCasts({
-      q: "#clipchain",
+    // Fetch all videos from the /clipchain channel - FAST!
+    const channelFeed = await client.fetchFeedByChannelIds({
+      channelIds: ["clipchain"],
       limit: 100,
+      withRecasts: false,
     });
 
-    console.log(`Found ${searchResults.result.casts.length} casts mentioning #clipchain`);
+    const casts = channelFeed.casts || [];
+    console.log(`Found ${casts.length} casts in /clipchain channel`);
 
     // Extract videos with .mp4 URLs
     const videos: VideoData[] = [];
 
-    searchResults.result.casts.forEach((cast: Cast) => {
+    casts.forEach((cast: Cast) => {
       // Find .mp4 video URL in embeds
       let videoUrl = "";
 

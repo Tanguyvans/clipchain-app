@@ -156,7 +156,6 @@ export function VideoFeed() {
               className="h-full w-full object-cover"
               autoPlay
               loop
-              muted
               playsInline
             />
           </div>

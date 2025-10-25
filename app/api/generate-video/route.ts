@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as fal from "@fal-ai/serverless-client";
+
+// Configure Fal AI
+fal.config({
+  credentials: process.env.FAL_KEY,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,24 +20,33 @@ export async function POST(request: NextRequest) {
     console.log("Generating video for prompt:", prompt);
     console.log("Payment transaction:", transactionHash);
 
-    // TODO: Replace this with your actual video generation logic
-    // Options:
-    // 1. Call an AI video generation API (Runway, Stability AI, etc.)
-    // 2. Use a local generation service
-    // 3. Queue a job and poll for results
+    // Generate video using Fal AI
+    // Using fal-ai/minimax-video - adjust model as needed
+    const result = await fal.subscribe("fal-ai/minimax-video", {
+      input: {
+        prompt: prompt,
+      },
+      logs: true,
+      onQueueUpdate: (update: any) => {
+        if (update.status === "IN_PROGRESS") {
+          console.log("Generation progress:", update.logs);
+        }
+      },
+    });
 
-    // Placeholder: Simulate video generation
-    await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
+    console.log("Fal AI result:", result);
 
-    // For now, return a placeholder video URL
-    // In production, this would be the actual generated video URL
-    const videoUrl = "https://example.com/generated-video.mp4";
+    // Extract video URL from result
+    const videoUrl = result.data?.video?.url;
+
+    if (!videoUrl) {
+      throw new Error("No video URL in Fal AI response");
+    }
 
     // TODO: You might want to:
     // 1. Verify the transaction on Base blockchain
-    // 2. Store generation request in a database
-    // 3. Upload video to IPFS/CDN
-    // 4. Create a frame URL for the video
+    // 2. Upload video to IPFS for permanent storage
+    // 3. Create a frame URL for the video
 
     return NextResponse.json({
       success: true,
@@ -45,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Video generation failed"
+        error: error instanceof Error ? error.message : "Video generation failed"
       },
       { status: 500 }
     );
