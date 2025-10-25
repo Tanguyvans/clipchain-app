@@ -157,6 +157,8 @@ export function VideoFeed() {
               autoPlay
               loop
               playsInline
+              muted={false}
+              controls={false}
             />
           </div>
 
