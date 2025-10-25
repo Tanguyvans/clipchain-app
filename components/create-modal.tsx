@@ -28,8 +28,9 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const [prompt, setPrompt] = useState("")
   const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [step, setStep] = useState<"prompt" | "payment" | "generating">("prompt")
+  const [step, setStep] = useState<"prompt" | "payment" | "generating" | "preview">("prompt")
   const [isMiniKitReady, setIsMiniKitReady] = useState(false)
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null)
 
   const durations: Duration[] = ["4", "8", "12"]
 
@@ -170,14 +171,12 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
         throw new Error("No video URL received")
       }
 
+      // Show preview
+      setGeneratedVideoUrl(videoUrl)
+      setStep("preview")
+      setIsGenerating(false)
       toast.success("Video generated!")
 
-      // Navigate to post-video page
-      router.push(
-        `/post-video?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(prompt)}`
-      )
-
-      onClose()
     } catch (error) {
       console.error("Generation error:", error)
       const errorMessage = error instanceof Error ? error.message : "Failed to generate video"
@@ -185,6 +184,20 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       setIsGenerating(false)
       setStep("prompt")
     }
+  }
+
+  const handlePostVideo = () => {
+    if (generatedVideoUrl) {
+      router.push(
+        `/post-video?url=${encodeURIComponent(generatedVideoUrl)}&text=${encodeURIComponent(prompt)}`
+      )
+      onClose()
+    }
+  }
+
+  const handleRegenerate = () => {
+    setGeneratedVideoUrl(null)
+    setStep("prompt")
   }
 
   if (!isOpen) return null
@@ -294,6 +307,26 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
               </div>
             </div>
           )}
+
+          {step === "preview" && generatedVideoUrl && (
+            <div className="p-6">
+              <h3 className="mb-4 text-xl font-bold text-white">Preview Your Video</h3>
+              <div className="relative aspect-[9/16] max-h-[500px] mx-auto overflow-hidden rounded-xl bg-black">
+                <video
+                  src={generatedVideoUrl}
+                  className="h-full w-full object-cover"
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                />
+              </div>
+              <div className="mt-4 rounded-xl border border-gray-800 bg-[#1A1A1A] p-4">
+                <p className="text-sm text-gray-400">Prompt:</p>
+                <p className="mt-1 text-white">{prompt}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer CTA */}
@@ -306,6 +339,23 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
             >
               Generate for 0.25 USDC ✨
             </button>
+          )}
+
+          {step === "preview" && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleRegenerate}
+                className="h-14 flex-1 rounded-full border-2 border-gray-700 text-lg font-bold text-white transition-all hover:border-gray-600 hover:bg-gray-800"
+              >
+                Regenerate
+              </button>
+              <button
+                onClick={handlePostVideo}
+                className="h-14 flex-1 rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                Post Video
+              </button>
+            </div>
           )}
         </div>
       </div>
