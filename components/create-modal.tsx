@@ -5,7 +5,6 @@ import { useState, useEffect } from "react"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useAuth } from "@/hooks/useAuth"
 
 interface CreateModalProps {
   isOpen: boolean
@@ -23,7 +22,6 @@ const GENERATION_COST = "250000"
 
 export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const router = useRouter()
-  const { isWalletConnected, walletAddress } = useAuth()
   const [prompt, setPrompt] = useState("")
   const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
