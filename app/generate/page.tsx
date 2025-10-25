@@ -18,9 +18,12 @@ const BASE_USDC_TOKEN = "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA
 // 0.25 USDC (6 decimals)
 const GENERATION_COST = "250000";
 
+type Duration = "4" | "8" | "12";
+
 export default function GenerateVideoPage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState("");
+  const [duration, setDuration] = useState<Duration>("4");
   const [isGenerating, setIsGenerating] = useState(false);
   const [step, setStep] = useState<"prompt" | "payment" | "generating">("prompt");
 
@@ -54,12 +57,13 @@ export default function GenerateVideoPage() {
       toast.success("Payment confirmed! Generating video...");
       setStep("generating");
 
-      // TODO: Call your video generation API
+      // Call video generation API with duration
       const response = await fetch("/api/generate-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt,
+          duration: parseInt(duration),
           transactionHash: paymentResult.send.transaction
         }),
       });
@@ -109,6 +113,26 @@ export default function GenerateVideoPage() {
                   className="min-h-[100px] border-gray-700 bg-[#0A0A0A] text-white"
                   disabled={isGenerating}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">Duration</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["4", "8", "12"] as Duration[]).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setDuration(d)}
+                      className={`rounded-lg border-2 py-2 text-sm font-semibold transition-all ${
+                        duration === d
+                          ? "border-purple-500 bg-purple-500 text-white"
+                          : "border-gray-700 bg-[#0A0A0A] text-gray-400 hover:border-gray-600"
+                      }`}
+                    >
+                      {d}s
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">

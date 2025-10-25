@@ -8,7 +8,7 @@ fal.config({
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, transactionHash } = await request.json();
+    const { prompt, duration, transactionHash } = await request.json();
 
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json(
@@ -17,14 +17,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate duration
+    const validDuration = duration && [4, 8, 12].includes(duration) ? duration : 4;
+
     console.log("Generating video for prompt:", prompt);
+    console.log("Duration:", validDuration, "seconds");
     console.log("Payment transaction:", transactionHash);
 
-    // Generate video using Fal AI
-    // Using fal-ai/minimax-video - adjust model as needed
-    const result = await fal.subscribe("fal-ai/minimax-video", {
+    // Generate video using Fal AI Sora 2
+    const result = await fal.subscribe("fal-ai/sora-2/text-to-video", {
       input: {
         prompt: prompt,
+        resolution: "720p",
+        aspect_ratio: "9:16", // Vertical for mobile TikTok-style
+        duration: validDuration,
       },
       logs: true,
       onQueueUpdate: (update) => {
@@ -34,7 +40,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log("Fal AI result:", result);
+    console.log("Fal AI Sora 2 result:", result);
 
     // Extract video URL from result
     const resultData = result as { data?: { video?: { url?: string } } };
