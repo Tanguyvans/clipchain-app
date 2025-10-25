@@ -1,7 +1,7 @@
 "use client"
 
 import { X, Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -26,8 +26,25 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
   const [step, setStep] = useState<"prompt" | "payment" | "generating">("prompt")
+  const [isMiniKitReady, setIsMiniKitReady] = useState(false)
 
   const durations: Duration[] = ["4", "8", "12"]
+
+  useEffect(() => {
+    // Check if MiniKit SDK is available
+    const checkMiniKit = async () => {
+      try {
+        // The SDK is available if we're in the Farcaster app
+        if (sdk && typeof sdk.actions !== 'undefined') {
+          setIsMiniKitReady(true)
+        }
+      } catch (error) {
+        console.error("MiniKit not available:", error)
+        setIsMiniKitReady(false)
+      }
+    }
+    checkMiniKit()
+  }, [])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -39,6 +56,13 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       setStep("payment")
       setIsGenerating(true)
 
+      // Check if SDK is ready
+      if (!isMiniKitReady || !sdk) {
+        throw new Error(
+          "Please open this app in the Farcaster mobile app to make payments"
+        )
+      }
+
       // Request payment via MiniKit sendToken
       toast.info("Opening payment...")
 
@@ -47,6 +71,8 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
         amount: GENERATION_COST,
         recipientAddress: RECIPIENT_WALLET,
       })
+
+      console.log("Payment result:", paymentResult)
 
       if (!paymentResult.success) {
         toast.error("Payment cancelled or failed")
@@ -59,6 +85,9 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       toast.success("Payment confirmed! Generating video...")
       setStep("generating")
 
+      // Get transaction hash
+      const transactionHash = paymentResult.send.transaction
+
       // Call video generation API with duration
       const response = await fetch("/api/generate-video", {
         method: "POST",
@@ -66,16 +95,21 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
         body: JSON.stringify({
           prompt,
           duration: parseInt(duration),
-          transactionHash: paymentResult.send.transaction,
+          transactionHash,
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Video generation failed")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Video generation failed")
       }
 
       const data = await response.json()
       const videoUrl = data.videoUrl
+
+      if (!videoUrl) {
+        throw new Error("No video URL received")
+      }
 
       toast.success("Video generated!")
 
@@ -87,7 +121,8 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
       onClose()
     } catch (error) {
       console.error("Generation error:", error)
-      toast.error("Failed to generate video")
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate video"
+      toast.error(errorMessage)
       setIsGenerating(false)
       setStep("prompt")
     }
