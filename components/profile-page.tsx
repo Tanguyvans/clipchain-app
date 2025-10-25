@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, MoreVertical, Share2, Settings, CheckCircle2, Play } from "lucide-react"
+import { ChevronLeft, MoreVertical, CheckCircle2, Play } from "lucide-react"
 import { useState } from "react"
 
 interface VideoGridItem {
@@ -81,9 +81,9 @@ export function ProfilePage({
       </div>
 
       {/* Profile Section */}
-      <div className="px-6 pb-6 text-center">
-        <div className="relative mb-4 inline-block">
-          <div className="relative h-28 w-28 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
+      <div className="px-6 pb-4 text-center">
+        <div className="relative mb-3 inline-block">
+          <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
             <img
               src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
               alt={displayName || username}
@@ -97,37 +97,27 @@ export function ProfilePage({
         </div>
 
         <div className="mb-1 flex items-center justify-center gap-1.5">
-          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
+          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-xl font-bold text-transparent">
             {displayName || username}
           </h1>
-          {verified && <CheckCircle2 className="h-5 w-5 fill-purple-500 text-white" />}
+          {verified && <CheckCircle2 className="h-4 w-4 fill-purple-500 text-white" />}
         </div>
         {displayName && username !== displayName && (
-          <p className="text-sm text-gray-500">@{username}</p>
+          <p className="text-xs text-gray-500">@{username}</p>
         )}
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 px-6 pb-6">
+      <div className="grid grid-cols-2 gap-2 px-6 pb-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-xl border border-gray-800 bg-[#1A1A1A] p-3 text-center"
+            className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-2 text-center"
           >
-            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-xs text-gray-400">{stat.label}</p>
           </div>
         ))}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 px-6 pb-6">
-        <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]">
-          <Share2 className="h-5 w-5 text-white" />
-        </button>
-        <button className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]">
-          <Settings className="h-5 w-5 text-white" />
-        </button>
       </div>
 
       {/* Tabs */}

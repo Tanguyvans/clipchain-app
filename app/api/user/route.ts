@@ -109,19 +109,29 @@ export async function GET(request: NextRequest) {
       userCasts = allCasts.filter(cast => {
         // Must be posted to clipchain channel
         const isInChannel = cast.channel?.id === "clipchain";
-        // And must have video embed
-        const hasVideo = cast.embeds?.some(embed => {
+
+        // Check if has video embed OR video URL in text
+        const hasVideoEmbed = cast.embeds?.some(embed => {
           const embedUrl = "url" in embed ? embed.url : null;
           if (!embedUrl || typeof embedUrl !== "string") return false;
           return embedUrl.includes(".mp4") || embedUrl.includes("fal.media") || embedUrl.includes("video");
         });
 
+        const hasVideoInText = cast.text && (
+          cast.text.includes(".mp4") ||
+          cast.text.includes("fal.media") ||
+          cast.text.includes("/files/")
+        );
+
+        const hasVideo = hasVideoEmbed || hasVideoInText;
         const matches = isInChannel && hasVideo;
+
         if (matches) {
           console.log("Found ClipChain video:", {
             hash: cast.hash,
             channel: cast.channel?.id,
-            embeds: cast.embeds?.map(e => "url" in e ? e.url : null)
+            hasEmbed: hasVideoEmbed,
+            hasTextUrl: hasVideoInText
           });
         }
         return matches;
@@ -136,15 +146,25 @@ export async function GET(request: NextRequest) {
     // Map videos
     const videos = userCasts
       .map((cast) => {
-        // Extract video URL
+        // Extract video URL from embeds or text
         let videoUrl = "";
+
+        // First try embeds
         if (cast.embeds) {
           for (const embed of cast.embeds) {
             const embedUrl = "url" in embed ? embed.url : null;
-            if (embedUrl && typeof embedUrl === "string" && embedUrl.includes(".mp4")) {
+            if (embedUrl && typeof embedUrl === "string" && (embedUrl.includes(".mp4") || embedUrl.includes("fal.media"))) {
               videoUrl = embedUrl;
               break;
             }
+          }
+        }
+
+        // If no embed, extract from text
+        if (!videoUrl && cast.text) {
+          const urlMatch = cast.text.match(/(https?:\/\/[^\s]+\.mp4)/);
+          if (urlMatch) {
+            videoUrl = urlMatch[1];
           }
         }
 
