@@ -192,12 +192,12 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     // Use MiniKit to open compose dialog with direct video URL
     if (sdk?.actions?.composeCast) {
       const castText = prompt
-        ? `${prompt}\n\nGenerated with ClipChain 🎬✨`
-        : "Check out my AI-generated video! 🎬✨";
+        ? `${prompt}\n\nGenerated with ClipChain 🎬✨\n\n${generatedVideoUrl}`
+        : `Check out my AI-generated video! 🎬✨\n\n${generatedVideoUrl}`;
 
       sdk.actions.composeCast({
         text: castText,
-        embeds: [generatedVideoUrl], // Direct video URL
+        embeds: [generatedVideoUrl], // Direct video URL in embeds
         channelKey: "clipchain",
       });
 
