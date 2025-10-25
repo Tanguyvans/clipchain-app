@@ -57,8 +57,9 @@ export async function POST(request: NextRequest) {
 
     // Extract video URL from result
     // Fal AI returns: { data: { video: { url: "..." } } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const resultData = result as any;
-    let videoUrl = resultData.data?.video?.url || resultData.video?.url || resultData.data?.url;
+    const videoUrl = resultData.data?.video?.url || resultData.video?.url || resultData.data?.url;
 
     console.log("🎥 Extracted video URL:", videoUrl);
 
