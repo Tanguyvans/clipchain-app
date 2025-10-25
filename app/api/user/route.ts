@@ -48,13 +48,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch user's casts
+    // Fetch user's casts using searchCasts (same method as feed)
     try {
-      const castsResponse = await client.fetchCastsForUser({
-        fid: userData.fid,
-        limit: 50,
+      const searchResults = await client.searchCasts({
+        q: `from:${userData.username} #clipchain`,
+        limit: 100,
       });
-      userCasts = castsResponse.casts || [];
+      userCasts = searchResults.result.casts || [];
+      console.log(`Found ${userCasts.length} casts for @${userData.username} with #clipchain`);
     } catch (err) {
       console.error("Error fetching user casts:", err);
       userCasts = [];
