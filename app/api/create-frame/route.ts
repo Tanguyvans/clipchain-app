@@ -12,13 +12,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create frame URL that will display the video
-    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      || "http://localhost:3000";
 
     const frameUrl = `${baseUrl}/frame?video=${encodeURIComponent(videoUrl)}`;
 
     console.log("📦 Created frame URL:", frameUrl);
+    console.log("🔧 Base URL:", baseUrl);
+    console.log("🎥 Video URL:", videoUrl);
 
     return NextResponse.json({
       success: true,

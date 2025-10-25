@@ -191,33 +191,18 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
 
     try {
       setIsGenerating(true);
-      toast.info("Creating frame...");
+      toast.info("Preparing post...");
 
-      // Create frame URL
-      const frameResponse = await fetch("/api/create-frame", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoUrl: generatedVideoUrl,
-          prompt: prompt,
-        }),
-      });
-
-      if (!frameResponse.ok) {
-        throw new Error("Failed to create frame");
-      }
-
-      const frameData = await frameResponse.json();
-
-      // Use MiniKit to open compose dialog with the frame
+      // Use MiniKit to open compose dialog with direct video URL
       if (sdk?.actions?.composeCast) {
         const castText = prompt
           ? `${prompt}\n\nGenerated with ClipChain 🎬✨`
           : "Check out my AI-generated video! 🎬✨";
 
+        // Try embedding the video URL directly
         await sdk.actions.composeCast({
           text: castText,
-          embeds: [frameData.frameUrl],
+          embeds: [generatedVideoUrl], // Use direct video URL
           channelKey: "clipchain",
         });
 
