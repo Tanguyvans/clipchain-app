@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useAuth } from "@/hooks/useAuth"
 
 interface CreateModalProps {
   isOpen: boolean
@@ -22,6 +23,7 @@ const GENERATION_COST = "250000"
 
 export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   const router = useRouter()
+  const { isWalletConnected, walletAddress } = useAuth()
   const [prompt, setPrompt] = useState("")
   const [duration, setDuration] = useState<Duration>("4")
   const [isGenerating, setIsGenerating] = useState(false)
@@ -34,8 +36,10 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     // Check if MiniKit SDK is available
     const checkMiniKit = async () => {
       try {
-        // The SDK is available if we're in the Farcaster app
-        if (sdk && typeof sdk.actions !== 'undefined') {
+        // Wait for context to be available
+        const context = await sdk.context
+        console.log("MiniKit context:", context)
+        if (context && sdk.actions) {
           setIsMiniKitReady(true)
         }
       } catch (error) {
@@ -53,40 +57,57 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     }
 
     try {
-      setStep("payment")
       setIsGenerating(true)
 
-      // Check if SDK is ready
-      if (!isMiniKitReady || !sdk) {
-        throw new Error(
-          "Please open this app in the Farcaster mobile app to make payments"
-        )
+      // Check if we're in development mode or if MiniKit is unavailable
+      const isDevelopment = process.env.NODE_ENV === 'development'
+
+      let transactionHash = "dev_tx_" + Date.now()
+
+      // Only try payment if MiniKit is ready and not in dev mode bypass
+      if (isMiniKitReady && sdk?.actions) {
+        setStep("payment")
+
+        // Request payment via MiniKit sendToken
+        toast.info("Opening payment...")
+
+        try {
+          const paymentResult = await sdk.actions.sendToken({
+            token: BASE_USDC_TOKEN,
+            amount: GENERATION_COST,
+            recipientAddress: RECIPIENT_WALLET,
+          })
+
+          console.log("Payment result:", paymentResult)
+
+          if (!paymentResult.success) {
+            toast.error("Payment cancelled or failed")
+            setIsGenerating(false)
+            setStep("prompt")
+            return
+          }
+
+          // Get transaction hash
+          transactionHash = paymentResult.send.transaction
+          toast.success("Payment confirmed! Generating video...")
+        } catch (paymentError) {
+          console.error("Payment error:", paymentError)
+
+          // If payment fails in dev mode, show option to continue anyway
+          if (isDevelopment) {
+            toast.error("Payment failed - continuing in dev mode")
+            transactionHash = "dev_tx_" + Date.now()
+          } else {
+            throw new Error("Payment failed. Please try again or contact support.")
+          }
+        }
+      } else if (isDevelopment) {
+        toast.info("Development mode - skipping payment")
+      } else {
+        throw new Error("Please open this app in the Farcaster mobile app to make payments")
       }
 
-      // Request payment via MiniKit sendToken
-      toast.info("Opening payment...")
-
-      const paymentResult = await sdk.actions.sendToken({
-        token: BASE_USDC_TOKEN,
-        amount: GENERATION_COST,
-        recipientAddress: RECIPIENT_WALLET,
-      })
-
-      console.log("Payment result:", paymentResult)
-
-      if (!paymentResult.success) {
-        toast.error("Payment cancelled or failed")
-        setIsGenerating(false)
-        setStep("prompt")
-        return
-      }
-
-      // Payment successful!
-      toast.success("Payment confirmed! Generating video...")
       setStep("generating")
-
-      // Get transaction hash
-      const transactionHash = paymentResult.send.transaction
 
       // Call video generation API with duration
       const response = await fetch("/api/generate-video", {
