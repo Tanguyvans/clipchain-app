@@ -1,7 +1,7 @@
 "use client"
 
-import { Heart, MessageCircle, Repeat2, Share2, Sparkles, CheckCircle2 } from "lucide-react"
-import { useState } from "react"
+import { Heart, MessageCircle, Repeat2, Share2, Sparkles, CheckCircle2, Volume2, VolumeX } from "lucide-react"
+import { useState, useRef } from "react"
 import type { VideoData } from "@/types/clipchain"
 
 interface FeedPageProps {
@@ -9,18 +9,67 @@ interface FeedPageProps {
 }
 
 export function FeedPage({ videos }: FeedPageProps) {
+  const [isMuted, setIsMuted] = useState(false) // Start unmuted
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
+
+  const toggleMute = () => {
+    const newMutedState = !isMuted
+    setIsMuted(newMutedState)
+    console.log(`🔊 Toggling mute to: ${newMutedState ? 'muted' : 'unmuted'}`)
+    console.log(`📊 videoRefs has ${videoRefs.current.size} videos`)
+
+    // Update all current videos
+    videoRefs.current.forEach((video, id) => {
+      console.log(`🎵 Setting video ${id} muted to: ${newMutedState}`)
+      video.muted = newMutedState
+      video.volume = 1.0
+
+      // Ensure video is playing
+      if (!newMutedState) {
+        video.play().catch(err => console.warn(`Play failed for ${id}:`, err))
+      }
+    })
+  }
+
   return (
     <div className="h-screen overflow-hidden bg-[#0A0A0A]">
+      {/* Global Mute/Unmute Button - Top Right */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          console.log('🔘 Mute button clicked')
+          toggleMute()
+        }}
+        className="fixed top-6 right-4 z-[9999] h-9 w-9 rounded-full bg-black/50 backdrop-blur-md hover:bg-black/70 flex items-center justify-center transition-all active:scale-95"
+        style={{ pointerEvents: 'auto' }}
+      >
+        {isMuted ? (
+          <VolumeX className="h-4 w-4 text-white/90" />
+        ) : (
+          <Volume2 className="h-4 w-4 text-white/90" />
+        )}
+      </button>
+
       <div className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
         {videos.map((video, index) => (
-          <VideoCard key={video.id} video={video} index={index} />
+          <VideoCard key={video.id} video={video} index={index} isMuted={isMuted} videoRefs={videoRefs} />
         ))}
       </div>
     </div>
   )
 }
 
-function VideoCard({ video, index }: { video: VideoData; index: number }) {
+function VideoCard({
+  video,
+  index,
+  isMuted,
+  videoRefs
+}: {
+  video: VideoData
+  index: number
+  isMuted: boolean
+  videoRefs: { current: Map<string, HTMLVideoElement> }
+}) {
   const [liked, setLiked] = useState(false)
   const [recasted, setRecasted] = useState(false)
 
@@ -42,12 +91,36 @@ function VideoCard({ video, index }: { video: VideoData; index: number }) {
         <div className={`absolute inset-0 ${bgGradient}`}>
           {video.videoUrl ? (
             <video
+              ref={(el) => {
+                if (el) {
+                  videoRefs.current.set(video.id, el)
+                  console.log(`📹 Video element created: ${video.id}`)
+                  // Start muted to allow autoplay
+                  el.muted = true
+                  el.volume = 1.0
+                  const playPromise = el.play()
+                  if (playPromise !== undefined) {
+                    playPromise
+                      .then(() => {
+                        console.log(`✅ Video ${video.id} playing`)
+                        // Unmute after playing starts if global state is unmuted
+                        if (!isMuted) {
+                          setTimeout(() => {
+                            el.muted = false
+                            console.log(`🔊 Unmuted video ${video.id}`)
+                          }, 100)
+                        }
+                      })
+                      .catch((error) => {
+                        console.warn(`⚠️ Video ${video.id} autoplay failed:`, error)
+                      })
+                  }
+                }
+              }}
               src={video.videoUrl}
               className="h-full w-full object-cover"
               loop
-              muted
               playsInline
-              autoPlay
             />
           ) : (
             <div className="flex h-full items-center justify-center">
