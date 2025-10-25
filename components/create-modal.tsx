@@ -186,12 +186,54 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     }
   }
 
-  const handlePostVideo = () => {
-    if (generatedVideoUrl) {
-      router.push(
-        `/post-video?url=${encodeURIComponent(generatedVideoUrl)}&text=${encodeURIComponent(prompt)}`
-      )
-      onClose()
+  const handlePostVideo = async () => {
+    if (!generatedVideoUrl) return;
+
+    try {
+      setIsGenerating(true);
+      toast.info("Creating frame...");
+
+      // Create frame URL
+      const frameResponse = await fetch("/api/create-frame", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          videoUrl: generatedVideoUrl,
+          prompt: prompt,
+        }),
+      });
+
+      if (!frameResponse.ok) {
+        throw new Error("Failed to create frame");
+      }
+
+      const frameData = await frameResponse.json();
+
+      // Use MiniKit to open compose dialog with the frame
+      if (sdk?.actions?.composeCast) {
+        const castText = prompt
+          ? `${prompt}\n\nGenerated with ClipChain 🎬✨`
+          : "Check out my AI-generated video! 🎬✨";
+
+        await sdk.actions.composeCast({
+          text: castText,
+          embeds: [frameData.frameUrl],
+          channelKey: "clipchain",
+        });
+
+        toast.success("Opening compose dialog...");
+        setIsGenerating(false);
+        onClose();
+        router.push("/");
+      } else {
+        throw new Error("Compose action not available");
+      }
+
+    } catch (error) {
+      console.error("Post error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create post";
+      toast.error(errorMessage);
+      setIsGenerating(false);
     }
   }
 
@@ -345,15 +387,24 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleRegenerate}
-                className="h-14 flex-1 rounded-full border-2 border-gray-700 text-lg font-bold text-white transition-all hover:border-gray-600 hover:bg-gray-800"
+                disabled={isGenerating}
+                className="h-14 flex-1 rounded-full border-2 border-gray-700 text-lg font-bold text-white transition-all hover:border-gray-600 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Regenerate
               </button>
               <button
                 onClick={handlePostVideo}
-                className="h-14 flex-1 rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95"
+                disabled={isGenerating}
+                className="h-14 flex-1 rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Post Video
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  "Post Video"
+                )}
               </button>
             </div>
           )}
