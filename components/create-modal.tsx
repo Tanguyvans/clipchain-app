@@ -186,55 +186,26 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
     }
   }
 
-  const handlePostVideo = async () => {
+  const handlePostVideo = () => {
     if (!generatedVideoUrl) return;
 
-    try {
-      setIsGenerating(true);
-      toast.info("Creating frame...");
+    // Use MiniKit to open compose dialog with direct video URL
+    if (sdk?.actions?.composeCast) {
+      const castText = prompt
+        ? `${prompt}\n\nGenerated with ClipChain 🎬✨`
+        : "Check out my AI-generated video! 🎬✨";
 
-      // Create frame URL
-      const frameResponse = await fetch("/api/create-frame", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          videoUrl: generatedVideoUrl,
-          prompt: prompt,
-        }),
+      sdk.actions.composeCast({
+        text: castText,
+        embeds: [generatedVideoUrl], // Direct video URL
+        channelKey: "clipchain",
       });
 
-      if (!frameResponse.ok) {
-        throw new Error("Failed to create frame");
-      }
-
-      const frameData = await frameResponse.json();
-      console.log("Frame URL:", frameData.frameUrl);
-
-      // Use MiniKit to open compose dialog with frame URL
-      if (sdk?.actions?.composeCast) {
-        const castText = prompt
-          ? `${prompt}\n\nGenerated with ClipChain 🎬✨`
-          : "Check out my AI-generated video! 🎬✨";
-
-        await sdk.actions.composeCast({
-          text: castText,
-          embeds: [frameData.frameUrl], // Frame URL with video meta tags
-          channelKey: "clipchain",
-        });
-
-        toast.success("Opening compose dialog...");
-        setIsGenerating(false);
-        onClose();
-        router.push("/");
-      } else {
-        throw new Error("Compose action not available");
-      }
-
-    } catch (error) {
-      console.error("Post error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to create post";
-      toast.error(errorMessage);
-      setIsGenerating(false);
+      toast.success("Opening compose dialog...");
+      onClose();
+      router.push("/");
+    } else {
+      toast.error("Compose action not available");
     }
   }
 
