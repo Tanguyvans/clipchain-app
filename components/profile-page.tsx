@@ -36,13 +36,11 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
 }: ProfilePageProps) {
-  const [activeTab, setActiveTab] = useState<"videos" | "saved" | "remixes">("videos")
+  const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
 
   const stats = [
     { label: "Videos", value: videoCount.toString(), color: "text-white" },
     { label: "Recasts", value: recastCount.toString(), color: "text-white" },
-    { label: "Spent", value: "$0.05", color: "text-orange-500" },
-    { label: "Earned", value: "$0.02", color: "text-green-500" },
   ]
 
   const displayVideos: VideoGridItem[] = videos.length > 0
@@ -119,7 +117,7 @@ export function ProfilePage({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-2 px-6 pb-6">
+      <div className="grid grid-cols-2 gap-3 px-6 pb-6">
         {stats.map((stat) => (
           <div
             key={stat.label}
@@ -146,20 +144,23 @@ export function ProfilePage({
 
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-800 px-6 pb-4">
-        {["My Videos", "Saved", "Remixes"].map((tab) => {
-          const tabKey = tab.toLowerCase().replace(" ", "").replace("my", "") as "videos" | "saved" | "remixes"
-          const isActive = activeTab === tabKey
+        {[
+          { label: "My Videos", key: "videos" as const },
+          { label: "Liked", key: "liked" as const },
+          { label: "Remixes", key: "remixes" as const },
+        ].map((tab) => {
+          const isActive = activeTab === tab.key
           return (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tabKey)}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               className={`pb-3 text-sm font-semibold transition-colors ${
                 isActive
                   ? "border-b-2 border-orange-500 text-white"
                   : "text-gray-400 hover:text-gray-300"
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           )
         })}
