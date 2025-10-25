@@ -34,8 +34,8 @@ export async function GET(request: NextRequest) {
     } else if (username) {
       // Fetch user by username
       const response = await client.lookupUserByUsername({ username });
-      // Extract user from response - check response structure
-      userData = (response as any).user || response;
+      // Extract user from response - lookupUserByUsername returns the user directly
+      userData = response as unknown as User;
     }
 
     if (!userData) {
