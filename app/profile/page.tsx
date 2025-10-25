@@ -17,11 +17,8 @@ interface UserData {
   fid: number
   username: string
   displayName: string
-  bio: string
   avatar: string
   verified: boolean
-  followerCount: number
-  followingCount: number
   videoCount: number
   recastCount: number
   videos: VideoGridItem[]
@@ -58,6 +55,7 @@ export default function Profile() {
         const data = await response.json()
 
         if (data.success && data.user) {
+          console.log("User data received:", data.user)
           setUserData(data.user)
         } else {
           console.error("Failed to fetch user:", data.error)
@@ -87,13 +85,10 @@ export default function Profile() {
     <ProfilePage
       username={userData?.username || "tanguyvans"}
       avatar={userData?.avatar}
-      bio={userData?.bio || "AI enthusiast | Building the future"}
       displayName={userData?.displayName}
       verified={userData?.verified}
-      followerCount={userData?.followerCount}
-      followingCount={userData?.followingCount}
-      videoCount={userData?.videoCount}
-      recastCount={userData?.recastCount}
+      videoCount={userData?.videoCount || 0}
+      recastCount={userData?.recastCount || 0}
       videos={userData?.videos || []}
     />
   )

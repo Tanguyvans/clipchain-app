@@ -20,15 +20,16 @@ function PostVideoContent() {
       try {
         // Decode the URL in case it's encoded
         const decodedUrl = decodeURIComponent(videoUrl);
-        const decodedText = text ? decodeURIComponent(text) : "Check out this video! 🎬";
+        const decodedText = text ? decodeURIComponent(text) : "Check out my ClipChain video! 🎬";
 
-        // Auto-open compose dialog immediately
+        // Auto-open compose dialog with /clipchain channel
         composeCast({
           text: decodedText,
           embeds: [decodedUrl],
+          channelKey: "clipchain", // Post to the /clipchain channel
         });
 
-        toast.success("Opening Farcaster compose dialog...");
+        toast.success("Posting to /clipchain channel...");
         setStatus("success");
       } catch (error) {
         console.error("Error composing cast:", error);

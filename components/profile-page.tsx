@@ -14,12 +14,9 @@ interface VideoGridItem {
 interface ProfilePageProps {
   username?: string
   avatar?: string
-  bio?: string
   videos?: VideoGridItem[]
   displayName?: string
   verified?: boolean
-  followerCount?: number
-  followingCount?: number
   videoCount?: number
   recastCount?: number
 }
@@ -27,12 +24,9 @@ interface ProfilePageProps {
 export function ProfilePage({
   username = "tanguyvans",
   avatar,
-  bio = "AI enthusiast | Building the future",
   videos = [],
   displayName,
   verified = false,
-  followerCount = 0,
-  followingCount = 0,
   videoCount = 0,
   recastCount = 0,
 }: ProfilePageProps) {
@@ -111,13 +105,6 @@ export function ProfilePage({
         {displayName && username !== displayName && (
           <p className="text-sm text-gray-500">@{username}</p>
         )}
-
-        <p className="mx-auto mb-1 max-w-xs text-sm text-gray-400">{bio}</p>
-        <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
-          <span>{followerCount} followers</span>
-          <span>•</span>
-          <span>{followingCount} following</span>
-        </div>
       </div>
 
       {/* Stats Grid */}
