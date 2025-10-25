@@ -98,7 +98,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm">
       {/* Modal Sheet */}
-      <div className="h-[80vh] max-h-[800px] w-full overflow-hidden rounded-t-3xl bg-[#0A0A0A] shadow-2xl animate-in slide-in-from-bottom duration-300">
+      <div className="flex h-[85vh] max-h-[800px] w-full flex-col overflow-hidden rounded-t-3xl bg-[#0A0A0A] shadow-2xl animate-in slide-in-from-bottom duration-300">
         {/* Drag Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1.5 w-12 rounded-full bg-gray-600" />
@@ -106,7 +106,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
 
         {/* Header */}
         <div className="relative border-b border-gray-800 px-6 py-4">
-          <h2 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
+          <h2 className="bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-2xl font-bold text-transparent">
             ✨ Generate Video
           </h2>
           <button
@@ -119,7 +119,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-4">
           {step === "prompt" && (
             <>
               {/* Prompt Input */}
@@ -150,7 +150,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
                       onClick={() => setDuration(d)}
                       className={`flex-1 rounded-lg border-2 px-6 py-2 text-sm font-semibold transition-all ${
                         duration === d
-                          ? "border-purple-500 bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                          ? "border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white"
                           : "border-gray-700 text-gray-400 hover:border-gray-600"
                       }`}
                       disabled={isGenerating}
@@ -162,8 +162,8 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
               </div>
 
               {/* Cost Card */}
-              <div className="mx-6 mb-4 rounded-xl border border-purple-500/20 bg-purple-500/10 p-4">
-                <p className="text-sm text-purple-300">
+              <div className="mx-6 mb-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-4">
+                <p className="text-sm text-orange-300">
                   💰 Cost: <span className="font-bold">0.25 USDC</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-400">
@@ -176,7 +176,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
           {step === "payment" && (
             <div className="flex min-h-[400px] items-center justify-center">
               <div className="space-y-4 text-center">
-                <Loader2 className="mx-auto h-12 w-12 animate-spin text-purple-500" />
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-orange-500" />
                 <div>
                   <p className="font-semibold text-white">Confirming Payment...</p>
                   <p className="text-sm text-gray-400">
@@ -190,7 +190,7 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
           {step === "generating" && (
             <div className="flex min-h-[400px] items-center justify-center">
               <div className="space-y-4 text-center">
-                <Loader2 className="mx-auto h-12 w-12 animate-spin text-purple-500" />
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-orange-500" />
                 <div>
                   <p className="font-semibold text-white">Generating Your Video...</p>
                   <p className="text-sm text-gray-400">
@@ -203,14 +203,14 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
         </div>
 
         {/* Footer CTA */}
-        <div className="border-t border-gray-800 px-6 pb-6 pt-4">
+        <div className="shrink-0 border-t border-gray-800 px-6 pb-6 pt-4">
           {step === "prompt" && (
             <button
               onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
-              className="h-14 w-full rounded-full bg-gradient-to-r from-purple-600 to-blue-600 text-lg font-bold text-white shadow-xl shadow-purple-500/40 transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-14 w-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Generate Video ✨
+              Generate for 0.25 USDC ✨
             </button>
           )}
         </div>
