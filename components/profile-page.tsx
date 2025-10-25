@@ -2,20 +2,26 @@
 
 import { ChevronLeft, MoreVertical, Share2, Settings, CheckCircle2, Play } from "lucide-react"
 import { useState } from "react"
-import type { VideoData } from "@/types/clipchain"
+
+interface VideoGridItem {
+  id: string
+  videoUrl: string
+  views?: number
+  likes?: number
+  duration?: string
+}
 
 interface ProfilePageProps {
   username?: string
   avatar?: string
   bio?: string
-  videos?: VideoData[]
-}
-
-interface VideoGridItem {
-  id: string
-  videoUrl: string
-  views: number
-  duration: string
+  videos?: VideoGridItem[]
+  displayName?: string
+  verified?: boolean
+  followerCount?: number
+  followingCount?: number
+  videoCount?: number
+  recastCount?: number
 }
 
 export function ProfilePage({
@@ -23,22 +29,28 @@ export function ProfilePage({
   avatar,
   bio = "AI enthusiast | Building the future",
   videos = [],
+  displayName,
+  verified = false,
+  followerCount = 0,
+  followingCount = 0,
+  videoCount = 0,
+  recastCount = 0,
 }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<"videos" | "saved" | "remixes">("videos")
 
   const stats = [
-    { label: "Videos", value: "12", color: "text-white" },
-    { label: "Recasts", value: "245", color: "text-white" },
+    { label: "Videos", value: videoCount.toString(), color: "text-white" },
+    { label: "Recasts", value: recastCount.toString(), color: "text-white" },
     { label: "Spent", value: "$0.05", color: "text-orange-500" },
     { label: "Earned", value: "$0.02", color: "text-green-500" },
   ]
 
-  const mockVideos: VideoGridItem[] = videos.length > 0
+  const displayVideos: VideoGridItem[] = videos.length > 0
     ? videos.map(v => ({
         id: v.id,
         videoUrl: v.videoUrl,
-        views: v.likes || 0,
-        duration: "0:10"
+        views: v.views || v.likes || 0,
+        duration: v.duration || "0:10"
       }))
     : [
         { id: "1", videoUrl: "", views: 1200, duration: "0:08" },
@@ -90,13 +102,20 @@ export function ProfilePage({
 
         <div className="mb-1 flex items-center justify-center gap-1.5">
           <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-2xl font-bold text-transparent">
-            {username}
+            {displayName || username}
           </h1>
-          <CheckCircle2 className="h-5 w-5 fill-purple-500 text-white" />
+          {verified && <CheckCircle2 className="h-5 w-5 fill-purple-500 text-white" />}
         </div>
+        {displayName && username !== displayName && (
+          <p className="text-sm text-gray-500">@{username}</p>
+        )}
 
         <p className="mx-auto mb-1 max-w-xs text-sm text-gray-400">{bio}</p>
-        <p className="text-xs text-gray-500">Joined Oct 2025</p>
+        <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+          <span>{followerCount} followers</span>
+          <span>•</span>
+          <span>{followingCount} following</span>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -147,9 +166,9 @@ export function ProfilePage({
       </div>
 
       {/* Video Grid */}
-      {mockVideos.length > 0 ? (
+      {displayVideos.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 px-6 pb-20 pt-6">
-          {mockVideos.map((video, index) => (
+          {displayVideos.map((video, index) => (
             <div
               key={video.id}
               className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-lg"
@@ -171,12 +190,12 @@ export function ProfilePage({
 
               {/* View Count */}
               <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white backdrop-blur-sm">
-                {video.views >= 1000 ? `${(video.views / 1000).toFixed(1)}K` : video.views}
+                {(video.views || 0) >= 1000 ? `${((video.views || 0) / 1000).toFixed(1)}K` : video.views || 0}
               </div>
 
               {/* Duration */}
               <div className="absolute top-1 right-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white backdrop-blur-sm">
-                {video.duration}
+                {video.duration || "0:10"}
               </div>
             </div>
           ))}
