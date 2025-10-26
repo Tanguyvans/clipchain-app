@@ -180,30 +180,30 @@ export function DiscoverPage() {
         body: JSON.stringify(requestBody),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || "Video generation failed")
-      }
-
       const data = await response.json()
 
-      if (data.success && data.videoUrl) {
-        setGeneratedVideoUrl(data.videoUrl)
-        toast.success("Video generated!")
-      } else {
+      if (!response.ok || !data.success) {
         // Show error message with refund info if applicable
         const errorMsg = data.error || "Failed to generate video"
 
         if (data.refundRequested) {
-          toast.error(`${errorMsg}. A refund of 0.25 USDC has been requested and will be processed.`, {
-            duration: 8000,
+          toast.error(`Generation failed: ${errorMsg}. A refund of 0.25 USDC has been requested and will be processed. Transaction: ${transactionHash}`, {
+            duration: 10000,
           })
-          console.log("🔄 Refund has been requested for failed generation")
+          console.log("🔄 Refund requested for transaction:", transactionHash)
+          console.log("Error:", errorMsg)
         } else {
           toast.error(errorMsg)
         }
 
         throw new Error(errorMsg)
+      }
+
+      if (data.videoUrl) {
+        setGeneratedVideoUrl(data.videoUrl)
+        toast.success("Video generated!")
+      } else {
+        throw new Error("No video URL received")
       }
     } catch (error) {
       console.error("Generation error:", error)
