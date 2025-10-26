@@ -30,13 +30,13 @@ interface LeaderboardUser {
 
 export async function GET(_request: NextRequest) {
   try {
-    // Search for casts mentioning #clipchain
-    const searchResults = await client.searchCasts({
-      q: "#clipchain",
-      limit: 100, // Get more results to have better data
+    // Get casts from the clipchain channel
+    const channelCasts = await client.fetchFeedByChannelIds({
+      channelIds: ["clipchain"],
+      limit: 100,
     });
 
-    console.log(`Found ${searchResults.result.casts.length} casts mentioning #clipchain`);
+    console.log(`Found ${channelCasts.casts.length} casts in /clipchain channel`);
 
     // Aggregate users by total recasts and likes across their casts
     const userStatsMap = new Map<number, {
@@ -50,7 +50,7 @@ export async function GET(_request: NextRequest) {
       castUrls: string[];
     }>();
 
-    searchResults.result.casts.forEach((cast: Cast) => {
+    channelCasts.casts.forEach((cast: Cast) => {
       // Check if cast has a .mp4 video URL
       const hasMP4Video = cast.embeds?.some((embed) => {
         const embedUrl = 'url' in embed ? embed.url : null;
@@ -67,11 +67,6 @@ export async function GET(_request: NextRequest) {
       const likes = cast.reactions.likes_count || 0;
       const recasts = cast.reactions.recasts_count || 0;
       const castUrl = `https://warpcast.com/${author.username}/${cast.hash.slice(0, 10)}`;
-
-      // Only count casts with engagement (likes or recasts)
-      if (likes === 0 && recasts === 0) {
-        return;
-      }
 
       if (userStatsMap.has(fid)) {
         const user = userStatsMap.get(fid)!;
@@ -93,17 +88,17 @@ export async function GET(_request: NextRequest) {
       }
     });
 
-    // Convert to array and sort by total recasts (primary), then likes (secondary)
+    // Convert to array and sort by video count (most videos generated)
     const leaderboard: LeaderboardUser[] = Array.from(userStatsMap.values())
       .sort((a, b) => {
-        // Sort by recasts first
-        if (b.totalRecasts !== a.totalRecasts) {
-          return b.totalRecasts - a.totalRecasts;
+        // Sort by video count (most videos generated)
+        if (b.castCount !== a.castCount) {
+          return b.castCount - a.castCount;
         }
-        // If recasts are equal, sort by likes
+        // If video count is equal, sort by likes
         return b.totalLikes - a.totalLikes;
       })
-      .slice(0, 10) // Top 10 users
+      .slice(0, 20) // Top 20 users
       .map((user, index) => ({
         rank: index + 1,
         username: user.username,
