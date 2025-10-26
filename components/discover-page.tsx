@@ -1,291 +1,177 @@
 "use client"
 
-import { Search, TrendingUp, Play, UserPlus } from "lucide-react"
-import { useState } from "react"
-import type { Creator, Template } from "@/types/clipchain"
+import { Sparkles, User, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/hooks/useAuth"
 
 export function DiscoverPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeCategory, setActiveCategory] = useState<"videos" | "creators" | "templates">("videos")
+  const { userData } = useAuth()
+  const [userBio, setUserBio] = useState<string>("")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const categories = ["Videos", "Creators", "Templates"]
+  // Fetch user's full profile including bio
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!userData?.fid) {
+        setIsLoading(false)
+        return
+      }
 
-  const trendingHashtags = [
-    { tag: "#cyberpunk", count: "1.2K videos" },
-    { tag: "#aiart", count: "890 videos" },
-    { tag: "#scifi", count: "654 videos" },
-    { tag: "#cinematic", count: "432 videos" },
-    { tag: "#nature", count: "321 videos" },
-  ]
+      try {
+        const response = await fetch(`/api/user?fid=${userData.fid}`)
+        const data = await response.json()
 
-  const mockVideos = [
-    {
-      id: "1",
-      thumbnail: "bg-gradient-to-br from-purple-600 to-blue-600",
-      views: "1.2K",
-      duration: "0:08",
-    },
-    {
-      id: "2",
-      thumbnail: "bg-gradient-to-br from-orange-600 to-pink-600",
-      views: "890",
-      duration: "0:10",
-    },
-    {
-      id: "3",
-      thumbnail: "bg-gradient-to-br from-green-600 to-teal-600",
-      views: "2.3K",
-      duration: "0:05",
-    },
-    {
-      id: "4",
-      thumbnail: "bg-gradient-to-br from-yellow-600 to-orange-600",
-      views: "654",
-      duration: "0:12",
-    },
-    {
-      id: "5",
-      thumbnail: "bg-gradient-to-br from-pink-600 to-purple-600",
-      views: "1.8K",
-      duration: "0:09",
-    },
-    {
-      id: "6",
-      thumbnail: "bg-gradient-to-br from-blue-600 to-cyan-600",
-      views: "432",
-      duration: "0:15",
-    },
-  ]
+        if (data.success && data.user.bio) {
+          setUserBio(data.user.bio)
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const mockCreators: Creator[] = [
-    {
-      id: "1",
-      username: "cryptoartist",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=cryptoartist",
-      verified: true,
-      videoCount: 23,
-    },
-    {
-      id: "2",
-      username: "aimaster",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aimaster",
-      verified: true,
-      videoCount: 18,
-    },
-    {
-      id: "3",
-      username: "neonwave",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=neonwave",
-      verified: false,
-      videoCount: 15,
-    },
-    {
-      id: "4",
-      username: "pixelwizard",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=pixelwizard",
-      verified: true,
-      videoCount: 12,
-    },
-  ]
+    fetchUserProfile()
+  }, [userData?.fid])
 
-  const mockTemplates: Template[] = [
-    {
-      id: "1",
-      title: "Cyberpunk Cityscape",
-      emoji: "🌃",
-      prompt: "A futuristic neon-lit cyberpunk city at night with flying cars",
-      useCount: 1234,
-    },
-    {
-      id: "2",
-      title: "Epic Movie Scene",
-      emoji: "🎬",
-      prompt: "A cinematic movie scene with dramatic lighting and camera work",
-      useCount: 892,
-    },
-    {
-      id: "3",
-      title: "Space Adventure",
-      emoji: "🚀",
-      prompt: "An epic space scene with planets, stars, and cosmic phenomena",
-      useCount: 756,
-    },
-    {
-      id: "4",
-      title: "Nature Paradise",
-      emoji: "🌊",
-      prompt: "A serene natural landscape with waterfalls and lush vegetation",
-      useCount: 623,
-    },
-  ]
+  const handleAnimateProfile = async () => {
+    if (!userData?.pfpUrl) return
+    setIsGenerating(true)
+    // TODO: Implement image-to-video generation
+    console.log("Animating profile picture:", userData?.pfpUrl)
+  }
 
-  const suggestedSearches = ["cyberpunk", "anime", "nature", "abstract", "cinematic"]
+  const handleBioToVideo = async () => {
+    if (!userBio) return
+    setIsGenerating(true)
+    // TODO: Implement bio-to-video generation
+    console.log("Generating video from bio:", userBio)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
-      {/* Sticky Search Header */}
+      {/* Header */}
       <div className="sticky top-0 z-20 border-b border-gray-800 bg-[#0A0A0A]/95 p-4 backdrop-blur-xl">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search videos, creators..."
-            className="w-full rounded-full bg-[#1A1A1A] py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-          />
+        <div className="flex items-center gap-3">
+          <Sparkles className="h-6 w-6 text-purple-500" />
+          <div>
+            <h1 className="text-xl font-bold text-white">Discover</h1>
+            <p className="text-sm text-gray-400">Generate videos from your profile</p>
+          </div>
         </div>
       </div>
 
-      {/* Category Toggle */}
-      <div className="flex gap-3 px-4 pb-6 pt-4">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat.toLowerCase() as "videos" | "creators" | "templates")}
-            className={`rounded-full px-6 py-2 text-sm font-semibold transition-all ${
-              activeCategory === cat.toLowerCase()
-                ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                : "bg-[#1A1A1A] text-gray-400 hover:text-gray-300"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {searchQuery === "" ? (
-        <>
-          {/* Trending Section */}
-          <div className="px-4 pb-6">
-            <h2 className="mb-4 text-lg font-bold text-white">🔥 Trending Now</h2>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide">
-              {trendingHashtags.map((item) => (
-                <div
-                  key={item.tag}
-                  className="min-w-[140px] cursor-pointer rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-4 transition-all hover:scale-105"
-                >
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-sm font-bold text-white">{item.tag}</p>
-                    <TrendingUp className="h-4 w-4 text-purple-400" />
-                  </div>
-                  <p className="text-xs text-gray-400">{item.count}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Results based on active category */}
-          <div className="px-4">
-            {activeCategory === "videos" && (
-              <div className="grid grid-cols-2 gap-3">
-                {mockVideos.map((video) => (
-                  <div
-                    key={video.id}
-                    className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-xl"
-                  >
-                    <div className={`h-full w-full ${video.thumbnail}`} />
-
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Play className="h-12 w-12 text-white" fill="white" />
-                    </div>
-
-                    {/* View Count */}
-                    <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                      {video.views}
-                    </div>
-
-                    {/* Duration */}
-                    <div className="absolute top-2 right-2 rounded bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-sm">
-                      {video.duration}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeCategory === "creators" && (
-              <div className="space-y-3">
-                {mockCreators.map((creator) => (
-                  <div
-                    key={creator.id}
-                    className="flex items-center gap-4 rounded-xl bg-[#1A1A1A] p-4"
-                  >
-                    <img
-                      src={creator.avatar}
-                      alt={creator.username}
-                      className="h-12 w-12 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-semibold text-white">{creator.username}</p>
-                        {creator.verified && (
-                          <div className="h-4 w-4 rounded-full bg-purple-500 flex items-center justify-center">
-                            <span className="text-[10px]">✓</span>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-400">{creator.videoCount} videos</p>
-                    </div>
-                    <button className="flex h-9 items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 px-4 text-sm font-semibold text-white transition-all hover:scale-105">
-                      <UserPlus className="h-4 w-4" />
-                      Follow
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeCategory === "templates" && (
-              <div className="space-y-4">
-                {mockTemplates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="rounded-xl bg-[#1A1A1A] p-4"
-                  >
-                    <div className="mb-3 flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="mb-1 flex items-center gap-2">
-                          <span className="text-2xl">{template.emoji}</span>
-                          <h3 className="font-bold text-white">{template.title}</h3>
-                        </div>
-                        <p className="text-sm text-gray-400">{template.prompt}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-500">
-                        {template.useCount.toLocaleString()} uses
-                      </p>
-                      <button className="rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:scale-105">
-                        Use Template
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        /* Empty/Search State */
+      {/* Not Signed In State */}
+      {!userData ? (
         <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
           <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-800">
-            <Search className="h-10 w-10 text-gray-600" />
+            <User className="h-10 w-10 text-gray-600" />
           </div>
-          <p className="mb-4 text-lg text-gray-400">Search for videos or creators</p>
+          <p className="text-lg text-gray-300 mb-2">Sign in to discover</p>
+          <p className="text-sm text-gray-500">
+            Connect your Farcaster account to generate personalized videos
+          </p>
+        </div>
+      ) : (
+        <div className="p-4 space-y-4">
+          {/* Animate Profile Picture */}
+          <div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/20 flex-shrink-0">
+                <Sparkles className="h-6 w-6 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2">Animate Your Profile Picture</h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Transform your profile picture into a dynamic animated video using AI
+                </p>
+                {userData.pfpUrl && (
+                  <div className="flex items-center gap-3 mb-4">
+                    <img
+                      src={userData.pfpUrl}
+                      alt="Your profile"
+                      className="h-16 w-16 rounded-full border-2 border-purple-500/50"
+                    />
+                    <div className="text-sm text-gray-400">
+                      <p className="font-medium text-white">{userData.displayName || userData.username}</p>
+                      <p className="text-xs text-gray-500">Will be animated</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button
+              disabled={!userData.pfpUrl || isGenerating}
+              onClick={handleAnimateProfile}
+              className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {isGenerating ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </span>
+              ) : (
+                "✨ Animate My Profile"
+              )}
+            </button>
+          </div>
 
-          {/* Suggested Searches */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {suggestedSearches.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => setSearchQuery(suggestion)}
-                className="rounded-full bg-[#1A1A1A] px-4 py-2 text-sm text-gray-400 transition-colors hover:bg-[#2A2A2A] hover:text-gray-300"
-              >
-                {suggestion}
-              </button>
-            ))}
+          {/* Bio to Video */}
+          <div className="rounded-xl bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 p-6">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20 flex-shrink-0">
+                <User className="h-6 w-6 text-orange-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white mb-2">Bio to Video</h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Generate a cinematic video based on your Farcaster bio and profile
+                </p>
+                {userBio ? (
+                  <div className="rounded-lg bg-black/30 p-3 border border-orange-500/20 mb-4">
+                    <p className="text-sm text-gray-300 italic">"{userBio}"</p>
+                    <p className="text-xs text-gray-500 mt-1">Your bio</p>
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-black/30 p-3 border border-orange-500/20 mb-4">
+                    <p className="text-sm text-gray-400">No bio found</p>
+                    <p className="text-xs text-gray-500 mt-1">Add a bio to your Farcaster profile to use this feature</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button
+              disabled={!userBio || isGenerating}
+              onClick={handleBioToVideo}
+              className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {isGenerating ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating...
+                </span>
+              ) : (
+                "🎬 Create Bio Video"
+              )}
+            </button>
+          </div>
+
+          {/* Info Card */}
+          <div className="rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-4">
+            <p className="text-sm text-gray-300 mb-1">💡 How it works</p>
+            <p className="text-xs text-gray-400">
+              We use your Farcaster profile data to create personalized AI-generated videos.
+              Each video is unique and based on your actual profile information.
+            </p>
           </div>
         </div>
       )}
