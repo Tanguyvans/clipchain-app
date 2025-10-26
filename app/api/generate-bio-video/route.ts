@@ -40,10 +40,11 @@ export async function POST(request: NextRequest) {
     console.log("📝 Bio:", bio);
     console.log("🔑 FAL_KEY present:", !!process.env.FAL_KEY);
 
-    // Create a creative prompt based on the bio
-    const enhancedPrompt = `Create a cinematic video that visually represents: "${bio}". ${
-      displayName ? `This is about ${displayName}. ` : ""
-    }Make it creative, engaging, and visually stunning with dynamic camera movements and vibrant colors.`;
+    // Create a short summary of the bio (first 100 chars or full bio if shorter)
+    const bioSummary = bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
+
+    // Create a presentation-style prompt where the person is giving a speech
+    const enhancedPrompt = `A professional presenter ${displayName ? `named ${displayName}` : ""} standing confidently and making a speech presentation. They are explaining: "${bioSummary}". Professional setting with good lighting, engaging body language, gesturing while speaking, cinematic camera angle, professional video production quality.`;
 
     console.log("🎨 Enhanced prompt:", enhancedPrompt);
 
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
         prompt: enhancedPrompt,
         resolution: "720p",
         aspect_ratio: "9:16", // Vertical for mobile
-        duration: 4,
+        duration: 8, // 8 seconds for speech presentation
       },
       logs: true,
       onQueueUpdate: (update) => {

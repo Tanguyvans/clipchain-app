@@ -50,13 +50,16 @@ export async function POST(request: NextRequest) {
     // Generate video using Fal AI Sora 2 image-to-video
     console.log("🚀 Starting Fal AI image-to-video generation...");
 
+    // Fun dancing animation prompt
+    const funPrompt = prompt || "The person in the image is dancing energetically with smooth moves, grooving to music, having fun, dynamic movement, professional cinematography";
+
     const result = await fal.subscribe("fal-ai/sora-2/image-to-video", {
       input: {
         image_url: imageUrl,
-        prompt: prompt || "Animate this image with subtle, natural movement",
+        prompt: funPrompt,
         resolution: "720p",
         aspect_ratio: "9:16", // Vertical for mobile
-        duration: 4, // 4 seconds for profile pic animation
+        duration: 8, // 8 seconds for fun dancing animation
       },
       logs: true,
       onQueueUpdate: (update) => {
