@@ -4,49 +4,83 @@ import { Sparkles, User, Loader2 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
 
+interface UserProfile {
+  username: string
+  displayName: string
+  avatar: string
+  bio: string
+}
+
 export function DiscoverPage() {
-  const { userData } = useAuth()
-  const [userBio, setUserBio] = useState<string>("")
+  const { walletAddress, userData: authUserData } = useAuth()
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Fetch user's full profile including bio
+  // Fetch user's full profile including bio - similar to profile page
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!userData?.fid) {
-        setIsLoading(false)
-        return
-      }
-
+      setIsLoading(true)
       try {
-        const response = await fetch(`/api/user?fid=${userData.fid}`)
+        let queryParam = ""
+
+        // Try to use wallet address first (from Base app)
+        if (walletAddress) {
+          queryParam = `address=${walletAddress}`
+          console.log("Fetching discover profile by wallet address:", walletAddress)
+        }
+        // Fallback to FID from auth context
+        else if (authUserData?.fid) {
+          queryParam = `fid=${authUserData.fid}`
+          console.log("Fetching discover profile by FID:", authUserData.fid)
+        }
+        // Fallback to username from auth context
+        else if (authUserData?.username) {
+          queryParam = `username=${authUserData.username}`
+          console.log("Fetching discover profile by username:", authUserData.username)
+        }
+        // Last resort: use default username
+        else {
+          queryParam = "username=tanguyvans"
+          console.log("Using default username for discover: tanguyvans")
+        }
+
+        const response = await fetch(`/api/user?${queryParam}`)
         const data = await response.json()
 
-        if (data.success && data.user.bio) {
-          setUserBio(data.user.bio)
+        if (data.success && data.user) {
+          console.log("Discover user data received:", data.user)
+          setUserProfile({
+            username: data.user.username,
+            displayName: data.user.displayName,
+            avatar: data.user.avatar,
+            bio: data.user.bio || ""
+          })
+        } else {
+          console.error("Failed to fetch user for discover:", data.error)
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error)
+        console.error("Error fetching user profile for discover:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchUserProfile()
-  }, [userData?.fid])
+  }, [walletAddress, authUserData])
 
   const handleAnimateProfile = async () => {
-    if (!userData?.pfpUrl) return
+    if (!userProfile?.avatar) return
     setIsGenerating(true)
     // TODO: Implement image-to-video generation
-    console.log("Animating profile picture:", userData?.pfpUrl)
+    console.log("Animating profile picture:", userProfile?.avatar)
   }
 
   const handleBioToVideo = async () => {
-    if (!userBio) return
+    if (!userProfile?.bio) return
     setIsGenerating(true)
     // TODO: Implement bio-to-video generation
-    console.log("Generating video from bio:", userBio)
+    console.log("Generating video from bio:", userProfile?.bio)
   }
 
   if (isLoading) {
@@ -70,18 +104,8 @@ export function DiscoverPage() {
         </div>
       </div>
 
-      {/* Not Signed In State */}
-      {!userData ? (
-        <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-800">
-            <User className="h-10 w-10 text-gray-600" />
-          </div>
-          <p className="text-lg text-gray-300 mb-2">Sign in to discover</p>
-          <p className="text-sm text-gray-500">
-            Connect your Farcaster account to generate personalized videos
-          </p>
-        </div>
-      ) : (
+      {/* Content */}
+      {userProfile && (
         <div className="p-4 space-y-4">
           {/* Animate Profile Picture */}
           <div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-6">
@@ -94,15 +118,15 @@ export function DiscoverPage() {
                 <p className="text-sm text-gray-400 mb-4">
                   Transform your profile picture into a dynamic animated video using AI
                 </p>
-                {userData.pfpUrl && (
+                {userProfile.avatar && (
                   <div className="flex items-center gap-3 mb-4">
                     <img
-                      src={userData.pfpUrl}
+                      src={userProfile.avatar}
                       alt="Your profile"
                       className="h-16 w-16 rounded-full border-2 border-purple-500/50"
                     />
                     <div className="text-sm text-gray-400">
-                      <p className="font-medium text-white">{userData.displayName || userData.username}</p>
+                      <p className="font-medium text-white">{userProfile.displayName || userProfile.username}</p>
                       <p className="text-xs text-gray-500">Will be animated</p>
                     </div>
                   </div>
@@ -110,7 +134,7 @@ export function DiscoverPage() {
               </div>
             </div>
             <button
-              disabled={!userData.pfpUrl || isGenerating}
+              disabled={!userProfile.avatar || isGenerating}
               onClick={handleAnimateProfile}
               className="w-full rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
@@ -136,9 +160,9 @@ export function DiscoverPage() {
                 <p className="text-sm text-gray-400 mb-4">
                   Generate a cinematic video based on your Farcaster bio and profile
                 </p>
-                {userBio ? (
+                {userProfile.bio ? (
                   <div className="rounded-lg bg-black/30 p-3 border border-orange-500/20 mb-4">
-                    <p className="text-sm text-gray-300 italic">&ldquo;{userBio}&rdquo;</p>
+                    <p className="text-sm text-gray-300 italic">&ldquo;{userProfile.bio}&rdquo;</p>
                     <p className="text-xs text-gray-500 mt-1">Your bio</p>
                   </div>
                 ) : (
@@ -150,7 +174,7 @@ export function DiscoverPage() {
               </div>
             </div>
             <button
-              disabled={!userBio || isGenerating}
+              disabled={!userProfile.bio || isGenerating}
               onClick={handleBioToVideo}
               className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-3 text-sm font-semibold text-white transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
