@@ -21,7 +21,7 @@ const GENERATION_COST = "250000" // 0.25 USDC
 
 export function DiscoverPage() {
   const { walletAddress, userData: authUserData } = useAuth()
-  const { isConnected, address } = useAccount()
+  const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -111,7 +111,6 @@ export function DiscoverPage() {
       setGenerationType(type)
 
       const isDevelopment = process.env.NODE_ENV === 'development'
-      let transactionHash = "dev_tx_" + Date.now()
 
       // Handle payment
       if (isMiniKitReady && sdk?.actions) {
@@ -137,7 +136,8 @@ export function DiscoverPage() {
               return
             }
 
-            transactionHash = paymentResult.send.transaction
+            // Payment successful
+            console.log("Payment transaction:", paymentResult.send.transaction)
             toast.success("Payment confirmed! Generating video...")
           } catch (paymentError) {
             console.error("Payment error:", paymentError)
