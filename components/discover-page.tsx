@@ -266,7 +266,7 @@ export function DiscoverPage() {
                 This may take 30-60 seconds
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Please don't close the app
+                Please don&apos;t close the app
               </p>
             </div>
           </div>
