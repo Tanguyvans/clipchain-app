@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { toast } from "sonner"
 import { useAccount, useConnect } from "wagmi"
+import { useComposeCast } from "@coinbase/onchainkit/minikit"
 
 interface UserProfile {
   username: string
@@ -23,6 +24,7 @@ export function DiscoverPage() {
   const { walletAddress, userData: authUserData } = useAuth()
   const { isConnected } = useAccount()
   const { connect, connectors } = useConnect()
+  const { composeCast } = useComposeCast()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -32,39 +34,26 @@ export function DiscoverPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [refundInfo, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
 
-  // Fetch user's full profile including bio - similar to profile page
+  // Fetch user's profile including bio
   useEffect(() => {
     const fetchUserProfile = async () => {
       setIsLoading(true)
       try {
-        let queryParam = ""
+        // Determine query parameter priority: wallet address > FID > username > default
+        const queryParam = walletAddress
+          ? `address=${walletAddress}`
+          : authUserData?.fid
+          ? `fid=${authUserData.fid}`
+          : authUserData?.username
+          ? `username=${authUserData.username}`
+          : "username=tanguyvans"
 
-        // Try to use wallet address first (from Base app)
-        if (walletAddress) {
-          queryParam = `address=${walletAddress}`
-          console.log("Fetching discover profile by wallet address:", walletAddress)
-        }
-        // Fallback to FID from auth context
-        else if (authUserData?.fid) {
-          queryParam = `fid=${authUserData.fid}`
-          console.log("Fetching discover profile by FID:", authUserData.fid)
-        }
-        // Fallback to username from auth context
-        else if (authUserData?.username) {
-          queryParam = `username=${authUserData.username}`
-          console.log("Fetching discover profile by username:", authUserData.username)
-        }
-        // Last resort: use default username
-        else {
-          queryParam = "username=tanguyvans"
-          console.log("Using default username for discover: tanguyvans")
-        }
+        console.log("Fetching discover profile:", queryParam)
 
         const response = await fetch(`/api/user?${queryParam}`)
         const data = await response.json()
 
         if (data.success && data.user) {
-          console.log("Discover user data received:", data.user)
           setUserProfile({
             username: data.user.username,
             displayName: data.user.displayName,
@@ -72,10 +61,10 @@ export function DiscoverPage() {
             bio: data.user.bio || ""
           })
         } else {
-          console.error("Failed to fetch user for discover:", data.error)
+          console.error("Failed to fetch user:", data.error)
         }
       } catch (error) {
-        console.error("Error fetching user profile for discover:", error)
+        console.error("Error fetching user profile:", error)
       } finally {
         setIsLoading(false)
       }
@@ -84,14 +73,13 @@ export function DiscoverPage() {
     fetchUserProfile()
   }, [walletAddress, authUserData])
 
-  // Check MiniKit availability
+  // Check MiniKit availability and auto-connect wallet
   useEffect(() => {
     const checkMiniKit = async () => {
       try {
         const context = await sdk.context
         if (context && sdk.actions) {
           setIsMiniKitReady(true)
-          // Auto-connect wallet if not connected
           if (!isConnected && connectors.length > 0) {
             connect({ connector: connectors[0] })
           }
@@ -104,6 +92,52 @@ export function DiscoverPage() {
     checkMiniKit()
   }, [isConnected, connectors, connect])
 
+  // Process payment and return transaction details
+  const processPayment = async (): Promise<{ transactionHash: string; userWalletAddress: string }> => {
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    let transactionHash = "dev_tx_" + Date.now()
+    let userWalletAddress = ""
+
+    if (isMiniKitReady && sdk?.actions) {
+      if (!isConnected && connectors.length > 0) {
+        toast.info("Connecting wallet...")
+        connect({ connector: connectors[0] })
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      }
+
+      if (isConnected || isDevelopment) {
+        toast.info("Opening payment...")
+
+        try {
+          const paymentResult = await sdk.actions.sendToken({
+            token: BASE_USDC_TOKEN,
+            amount: GENERATION_COST,
+            recipientAddress: RECIPIENT_WALLET,
+          })
+
+          if (!paymentResult.success) {
+            throw new Error("Payment cancelled or failed")
+          }
+
+          transactionHash = paymentResult.send.transaction
+          userWalletAddress = walletAddress || authUserData?.address || ""
+          console.log("Payment transaction:", transactionHash)
+          toast.success("Payment confirmed! Generating video...")
+        } catch (paymentError) {
+          console.error("Payment error:", paymentError)
+          if (!isDevelopment) {
+            throw new Error("Payment failed. Please try again.")
+          }
+          toast.warning("Payment failed - continuing in dev mode")
+        }
+      }
+    } else if (isDevelopment) {
+      toast.info("Development mode - skipping payment")
+    }
+
+    return { transactionHash, userWalletAddress }
+  }
+
   const handlePaymentAndGenerate = async (type: "profile" | "bio") => {
     if (type === "profile" && !userProfile?.avatar) return
     if (type === "bio" && !userProfile?.bio) return
@@ -114,71 +148,17 @@ export function DiscoverPage() {
       setErrorMessage(null)
       setRefundInfo(null)
 
-      const isDevelopment = process.env.NODE_ENV === 'development'
-      let transactionHash = "dev_tx_" + Date.now()
-      let userWalletAddress = ""
+      // Process payment
+      const { transactionHash, userWalletAddress } = await processPayment()
 
-      // Handle payment
-      if (isMiniKitReady && sdk?.actions) {
-        if (!isConnected && connectors.length > 0) {
-          toast.info("Connecting wallet...")
-          connect({ connector: connectors[0] })
-          await new Promise(resolve => setTimeout(resolve, 1500))
-        }
-
-        if (isConnected || isDevelopment) {
-          toast.info("Opening payment...")
-
-          try {
-            const paymentResult = await sdk.actions.sendToken({
-              token: BASE_USDC_TOKEN,
-              amount: GENERATION_COST,
-              recipientAddress: RECIPIENT_WALLET,
-            })
-
-            if (!paymentResult.success) {
-              toast.error("Payment cancelled or failed")
-              setIsGenerating(false)
-              return
-            }
-
-            // Payment successful - save transaction details for potential refund
-            transactionHash = paymentResult.send.transaction
-            // Get user's wallet address from the payment result or auth context
-            userWalletAddress = walletAddress || authUserData?.address || ""
-            console.log("Payment transaction:", transactionHash)
-            console.log("User wallet:", userWalletAddress)
-            toast.success("Payment confirmed! Generating video...")
-          } catch (paymentError) {
-            console.error("Payment error:", paymentError)
-            if (isDevelopment) {
-              toast.warning("Payment failed - continuing in dev mode")
-            } else {
-              throw new Error("Payment failed. Please try again.")
-            }
-          }
-        }
-      } else if (isDevelopment) {
-        toast.info("Development mode - skipping payment")
-      }
-
-      // Generate video based on type
-      const apiEndpoint = type === "profile" ? "/api/generate-image-to-video" : "/api/generate-bio-video"
+      // Build request body
+      const baseBody = { imageUrl: userProfile?.avatar, transactionHash, userWalletAddress }
       const requestBody = type === "profile"
-        ? {
-            imageUrl: userProfile?.avatar,
-            prompt: "Animate this profile picture with subtle, natural movement",
-            transactionHash,
-            userWalletAddress
-          }
-        : {
-            imageUrl: userProfile?.avatar,
-            bio: userProfile?.bio,
-            displayName: userProfile?.displayName,
-            transactionHash,
-            userWalletAddress
-          }
+        ? { ...baseBody, prompt: "Animate this profile picture with subtle, natural movement" }
+        : { ...baseBody, bio: userProfile?.bio, displayName: userProfile?.displayName }
 
+      // Call generation API
+      const apiEndpoint = type === "profile" ? "/api/generate-image-to-video" : "/api/generate-bio-video"
       const response = await fetch(apiEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,37 +167,31 @@ export function DiscoverPage() {
 
       const data = await response.json()
 
+      // Handle errors with refund info
       if (!response.ok || !data.success) {
-        // Show error message with refund info if applicable
         const errorMsg = data.error || "Failed to generate video"
+        setErrorMessage(errorMsg)
 
         if (data.refundRequested) {
-          const refundMessage = `Generation failed. A refund of 0.25 USDC has been requested and will be processed.`
-          setErrorMessage(errorMsg)
           setRefundInfo({ txHash: transactionHash, refunded: true })
-
-          toast.error(refundMessage, {
-            duration: 10000,
-          })
-          console.log("🔄 Refund requested for transaction:", transactionHash)
-          console.log("Error:", errorMsg)
+          toast.error(`Generation failed. A refund of 0.25 USDC has been requested.`, { duration: 10000 })
+          console.log("🔄 Refund requested:", transactionHash, errorMsg)
         } else {
-          setErrorMessage(errorMsg)
           toast.error(errorMsg, { duration: 5000 })
         }
-
-        throw new Error(errorMsg)
+        return
       }
 
+      // Success
       if (data.videoUrl) {
         setGeneratedVideoUrl(data.videoUrl)
         toast.success("Video generated!")
-      } else {
-        throw new Error("No video URL received")
       }
     } catch (error) {
       console.error("Generation error:", error)
-      // Error state already set above
+      if (error instanceof Error) {
+        toast.error(error.message)
+      }
     } finally {
       setIsGenerating(false)
     }
@@ -229,14 +203,22 @@ export function DiscoverPage() {
   const handlePostVideo = () => {
     if (!generatedVideoUrl) return
 
-    if (sdk?.actions?.composeCast) {
+    try {
       const castText = generationType === "profile"
-        ? `Check out my animated profile! 🎬✨\n\n${generatedVideoUrl}`
-        : `Video generated from my bio! 🎬✨\n\n${generatedVideoUrl}`
+        ? `Check out my animated profile! 💃✨\n\nGenerated with @clipchain`
+        : `Watch me present my bio! 🎤✨\n\nGenerated with @clipchain`
 
-      sdk.actions.composeCast({
+      // Use OnchainKit's composeCast with channelKey to post to /clipchain
+      composeCast({
         text: castText,
+        embeds: [generatedVideoUrl],
+        channelKey: "clipchain", // Post to the /clipchain channel
       })
+
+      toast.success("Opening Farcaster composer...")
+    } catch (error) {
+      console.error("Error composing cast:", error)
+      toast.error("Failed to open compose dialog")
     }
 
     // Close modal and reset
