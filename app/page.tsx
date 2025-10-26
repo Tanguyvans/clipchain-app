@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useMiniKit } from "@coinbase/onchainkit/minikit";
 import { useSearchParams } from "next/navigation";
 import { FeedPage } from "@/components/feed-page";
 import { Loader2 } from "lucide-react";
 import type { VideoData } from "@/types/clipchain";
 
-export default function Home() {
+function HomeContent() {
   const { isFrameReady, setFrameReady } = useMiniKit();
   const searchParams = useSearchParams();
   const videoId = searchParams.get("videoId");
@@ -118,4 +118,19 @@ export default function Home() {
   }
 
   return <FeedPage videos={videos} initialVideoId={videoId} />;
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full bg-[#0A0A0A] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-500" />
+          <p className="text-white text-sm">Loading ClipChain...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
+  );
 }
