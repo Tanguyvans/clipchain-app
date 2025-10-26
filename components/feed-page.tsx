@@ -11,6 +11,7 @@ interface FeedPageProps {
 
 export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
   const [isMuted, setIsMuted] = useState(false) // Start unmuted
+  const [currentVideoId, setCurrentVideoId] = useState<string | null>(null)
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -28,23 +29,56 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
     }
   }, [initialVideoId, videos])
 
+  // Manage video playback based on visibility
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const videoId = entry.target.getAttribute('data-video-id')
+          const videoElement = videoId ? videoRefs.current.get(videoId) : null
+
+          if (entry.isIntersecting && videoElement) {
+            // Video is in view - play it
+            console.log(`📹 Video ${videoId} is in view`)
+            setCurrentVideoId(videoId)
+            videoElement.muted = isMuted
+            videoElement.play().catch(err => console.warn(`Play failed:`, err))
+          } else if (videoElement) {
+            // Video is out of view - pause and mute it
+            console.log(`📹 Video ${videoId} is out of view`)
+            videoElement.pause()
+            videoElement.currentTime = 0
+          }
+        })
+      },
+      {
+        root: containerRef.current,
+        threshold: 0.5, // Video must be 50% visible
+      }
+    )
+
+    // Observe all video containers
+    const videoContainers = containerRef.current.querySelectorAll('[data-video-id]')
+    videoContainers.forEach((container) => observer.observe(container))
+
+    return () => observer.disconnect()
+  }, [isMuted, videos])
+
   const toggleMute = () => {
     const newMutedState = !isMuted
     setIsMuted(newMutedState)
     console.log(`🔊 Toggling mute to: ${newMutedState ? 'muted' : 'unmuted'}`)
-    console.log(`📊 videoRefs has ${videoRefs.current.size} videos`)
 
-    // Update all current videos
-    videoRefs.current.forEach((video, id) => {
-      console.log(`🎵 Setting video ${id} muted to: ${newMutedState}`)
-      video.muted = newMutedState
-      video.volume = 1.0
-
-      // Ensure video is playing
-      if (!newMutedState) {
-        video.play().catch(err => console.warn(`Play failed for ${id}:`, err))
+    // Update only the currently playing video
+    if (currentVideoId) {
+      const video = videoRefs.current.get(currentVideoId)
+      if (video) {
+        video.muted = newMutedState
+        video.volume = 1.0
       }
-    })
+    }
   }
 
   return (
@@ -100,7 +134,7 @@ function VideoCard({
   const bgGradient = gradients[index % gradients.length]
 
   return (
-    <div className="relative min-h-screen snap-start">
+    <div className="relative min-h-screen snap-start" data-video-id={video.id}>
       {/* Video Container */}
       <div className="relative h-screen w-full overflow-hidden">
         {/* Background - Video or Image would go here */}
@@ -110,33 +144,15 @@ function VideoCard({
               ref={(el) => {
                 if (el) {
                   videoRefs.current.set(video.id, el)
-                  console.log(`📹 Video element created: ${video.id}`)
-                  // Start muted to allow autoplay
-                  el.muted = true
                   el.volume = 1.0
-                  const playPromise = el.play()
-                  if (playPromise !== undefined) {
-                    playPromise
-                      .then(() => {
-                        console.log(`✅ Video ${video.id} playing`)
-                        // Unmute after playing starts if global state is unmuted
-                        if (!isMuted) {
-                          setTimeout(() => {
-                            el.muted = false
-                            console.log(`🔊 Unmuted video ${video.id}`)
-                          }, 100)
-                        }
-                      })
-                      .catch((error) => {
-                        console.warn(`⚠️ Video ${video.id} autoplay failed:`, error)
-                      })
-                  }
+                  el.muted = true // Start muted, IntersectionObserver will unmute if needed
                 }
               }}
               src={video.videoUrl}
               className="h-full w-full object-cover"
               loop
               playsInline
+              preload="auto"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
