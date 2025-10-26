@@ -160,7 +160,7 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
 
       <div ref={containerRef} className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
         {videos.map((video, index) => (
-          <VideoCard key={video.id} video={video} index={index} isMuted={isMuted} videoRefs={videoRefs} />
+          <VideoCard key={video.id} video={video} index={index} videoRefs={videoRefs} />
         ))}
       </div>
     </div>
@@ -170,12 +170,10 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
 function VideoCard({
   video,
   index,
-  isMuted,
   videoRefs
 }: {
   video: VideoData
   index: number
-  isMuted: boolean
   videoRefs: { current: Map<string, HTMLVideoElement> }
 }) {
   const [liked, setLiked] = useState(false)
