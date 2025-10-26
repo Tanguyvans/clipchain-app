@@ -138,7 +138,7 @@ export function DiscoverPage() {
                 </p>
                 {userBio ? (
                   <div className="rounded-lg bg-black/30 p-3 border border-orange-500/20 mb-4">
-                    <p className="text-sm text-gray-300 italic">"{userBio}"</p>
+                    <p className="text-sm text-gray-300 italic">&ldquo;{userBio}&rdquo;</p>
                     <p className="text-xs text-gray-500 mt-1">Your bio</p>
                   </div>
                 ) : (
