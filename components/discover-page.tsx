@@ -29,6 +29,8 @@ export function DiscoverPage() {
   const [isMiniKitReady, setIsMiniKitReady] = useState(false)
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null)
   const [generationType, setGenerationType] = useState<"profile" | "bio" | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [refundInfo, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
 
   // Fetch user's full profile including bio - similar to profile page
   useEffect(() => {
@@ -109,6 +111,8 @@ export function DiscoverPage() {
     try {
       setIsGenerating(true)
       setGenerationType(type)
+      setErrorMessage(null)
+      setRefundInfo(null)
 
       const isDevelopment = process.env.NODE_ENV === 'development'
       let transactionHash = "dev_tx_" + Date.now()
@@ -187,13 +191,18 @@ export function DiscoverPage() {
         const errorMsg = data.error || "Failed to generate video"
 
         if (data.refundRequested) {
-          toast.error(`Generation failed: ${errorMsg}. A refund of 0.25 USDC has been requested and will be processed. Transaction: ${transactionHash}`, {
+          const refundMessage = `Generation failed. A refund of 0.25 USDC has been requested and will be processed.`
+          setErrorMessage(errorMsg)
+          setRefundInfo({ txHash: transactionHash, refunded: true })
+
+          toast.error(refundMessage, {
             duration: 10000,
           })
           console.log("🔄 Refund requested for transaction:", transactionHash)
           console.log("Error:", errorMsg)
         } else {
-          toast.error(errorMsg)
+          setErrorMessage(errorMsg)
+          toast.error(errorMsg, { duration: 5000 })
         }
 
         throw new Error(errorMsg)
@@ -207,7 +216,7 @@ export function DiscoverPage() {
       }
     } catch (error) {
       console.error("Generation error:", error)
-      // Error already shown via toast above
+      // Error state already set above
     } finally {
       setIsGenerating(false)
     }
@@ -269,6 +278,39 @@ export function DiscoverPage() {
                 Please don&apos;t close the app
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner - Show if generation failed with refund */}
+      {refundInfo && errorMessage && !isGenerating && !generatedVideoUrl && (
+        <div className="mx-4 mt-4 mb-2 rounded-xl bg-red-500/10 border border-red-500/30 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-red-500/20">
+              <span className="text-red-400 text-xl">⚠️</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-400 mb-1">Generation Failed</h3>
+              <p className="text-sm text-red-300 mb-2">{errorMessage}</p>
+              <div className="rounded-lg bg-black/30 p-3 border border-red-500/20">
+                <p className="text-xs font-medium text-red-200 mb-1">🔄 Refund Requested</p>
+                <p className="text-xs text-gray-400">
+                  A refund of 0.25 USDC has been requested and will be processed.
+                </p>
+                <p className="text-xs text-gray-500 mt-2 break-all">
+                  Transaction: {refundInfo.txHash}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setErrorMessage(null)
+                setRefundInfo(null)
+              }}
+              className="flex-shrink-0 rounded-full p-1 hover:bg-red-500/20 transition-colors"
+            >
+              <X className="h-4 w-4 text-red-400" />
+            </button>
           </div>
         </div>
       )}
