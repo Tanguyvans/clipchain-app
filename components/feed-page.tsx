@@ -12,8 +12,52 @@ interface FeedPageProps {
 export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
   const [isMuted, setIsMuted] = useState(false) // Start unmuted
   const [currentVideoId, setCurrentVideoId] = useState<string | null>(null)
+  const [hasInteracted, setHasInteracted] = useState(false)
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Auto-enable interaction on mount (after a small delay to ensure everything is loaded)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('🎬 Auto-enabling sound on page load')
+      setHasInteracted(true)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Detect first user interaction (scroll also counts as interaction)
+  useEffect(() => {
+    const handleInteraction = (event: Event) => {
+      console.log(`🎯 User interaction detected via ${event.type}!`)
+      setHasInteracted(true)
+      // Enable sound for current video immediately
+      if (currentVideoId) {
+        const video = videoRefs.current.get(currentVideoId)
+        if (video && !isMuted) {
+          video.muted = false
+          console.log('🔊 Unmuted current video after interaction')
+        }
+      }
+    }
+
+    const events = ['click', 'touchstart', 'scroll', 'touchmove', 'wheel']
+    events.forEach(event => {
+      document.addEventListener(event, handleInteraction, { once: true, passive: true })
+      // Also listen on the container
+      if (containerRef.current) {
+        containerRef.current.addEventListener(event, handleInteraction, { once: true, passive: true })
+      }
+    })
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleInteraction)
+        if (containerRef.current) {
+          containerRef.current.removeEventListener(event, handleInteraction)
+        }
+      })
+    }
+  }, [currentVideoId, isMuted])
 
   // Scroll to initial video if specified
   useEffect(() => {
@@ -43,8 +87,22 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
             // Video is in view - play it
             console.log(`📹 Video ${videoId} is in view`)
             setCurrentVideoId(videoId)
-            videoElement.muted = isMuted
-            videoElement.play().catch(err => console.warn(`Play failed:`, err))
+
+            // Always start muted to allow autoplay
+            videoElement.muted = true
+            videoElement.play()
+              .then(() => {
+                console.log(`✅ Video ${videoId} playing`)
+                // Successfully playing, now unmute if user has interacted and wants sound
+                if (hasInteracted && !isMuted) {
+                  // Small delay to ensure video is playing before unmuting
+                  setTimeout(() => {
+                    videoElement.muted = false
+                    console.log(`🔊 Unmuted video ${videoId}, hasInteracted: ${hasInteracted}, isMuted: ${isMuted}`)
+                  }, 100)
+                }
+              })
+              .catch(err => console.warn(`Play failed for ${videoId}:`, err))
           } else if (videoElement) {
             // Video is out of view - pause and mute it
             console.log(`📹 Video ${videoId} is out of view`)
@@ -64,7 +122,7 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
     videoContainers.forEach((container) => observer.observe(container))
 
     return () => observer.disconnect()
-  }, [isMuted, videos])
+  }, [isMuted, videos, hasInteracted])
 
   const toggleMute = () => {
     const newMutedState = !isMuted
