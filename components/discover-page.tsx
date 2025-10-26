@@ -1,8 +1,11 @@
 "use client"
 
-import { Sparkles, User, Loader2 } from "lucide-react"
+import { Sparkles, User, Loader2, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
+import { sdk } from "@farcaster/miniapp-sdk"
+import { toast } from "sonner"
+import { useAccount, useConnect } from "wagmi"
 
 interface UserProfile {
   username: string
@@ -11,11 +14,21 @@ interface UserProfile {
   bio: string
 }
 
+// Payment constants
+const RECIPIENT_WALLET = "0x2869B9D189a892181E02157f77411E312b9a6Ee6"
+const BASE_USDC_TOKEN = "eip155:8453/erc20:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+const GENERATION_COST = "250000" // 0.25 USDC
+
 export function DiscoverPage() {
   const { walletAddress, userData: authUserData } = useAuth()
+  const { isConnected, address } = useAccount()
+  const { connect, connectors } = useConnect()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isMiniKitReady, setIsMiniKitReady] = useState(false)
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null)
+  const [generationType, setGenerationType] = useState<"profile" | "bio" | null>(null)
 
   // Fetch user's full profile including bio - similar to profile page
   useEffect(() => {
@@ -69,18 +82,129 @@ export function DiscoverPage() {
     fetchUserProfile()
   }, [walletAddress, authUserData])
 
-  const handleAnimateProfile = async () => {
-    if (!userProfile?.avatar) return
-    setIsGenerating(true)
-    // TODO: Implement image-to-video generation
-    console.log("Animating profile picture:", userProfile?.avatar)
+  // Check MiniKit availability
+  useEffect(() => {
+    const checkMiniKit = async () => {
+      try {
+        const context = await sdk.context
+        if (context && sdk.actions) {
+          setIsMiniKitReady(true)
+          // Auto-connect wallet if not connected
+          if (!isConnected && connectors.length > 0) {
+            connect({ connector: connectors[0] })
+          }
+        }
+      } catch (error) {
+        console.error("MiniKit not available:", error)
+        setIsMiniKitReady(false)
+      }
+    }
+    checkMiniKit()
+  }, [isConnected, connectors, connect])
+
+  const handlePaymentAndGenerate = async (type: "profile" | "bio") => {
+    if (type === "profile" && !userProfile?.avatar) return
+    if (type === "bio" && !userProfile?.bio) return
+
+    try {
+      setIsGenerating(true)
+      setGenerationType(type)
+
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      let transactionHash = "dev_tx_" + Date.now()
+
+      // Handle payment
+      if (isMiniKitReady && sdk?.actions) {
+        if (!isConnected && connectors.length > 0) {
+          toast.info("Connecting wallet...")
+          connect({ connector: connectors[0] })
+          await new Promise(resolve => setTimeout(resolve, 1500))
+        }
+
+        if (isConnected || isDevelopment) {
+          toast.info("Opening payment...")
+
+          try {
+            const paymentResult = await sdk.actions.sendToken({
+              token: BASE_USDC_TOKEN,
+              amount: GENERATION_COST,
+              recipientAddress: RECIPIENT_WALLET,
+            })
+
+            if (!paymentResult.success) {
+              toast.error("Payment cancelled or failed")
+              setIsGenerating(false)
+              return
+            }
+
+            transactionHash = paymentResult.send.transaction
+            toast.success("Payment confirmed! Generating video...")
+          } catch (paymentError) {
+            console.error("Payment error:", paymentError)
+            if (isDevelopment) {
+              toast.warning("Payment failed - continuing in dev mode")
+            } else {
+              throw new Error("Payment failed. Please try again.")
+            }
+          }
+        }
+      } else if (isDevelopment) {
+        toast.info("Development mode - skipping payment")
+      }
+
+      // Generate video based on type
+      const apiEndpoint = type === "profile" ? "/api/generate-image-to-video" : "/api/generate-bio-video"
+      const requestBody = type === "profile"
+        ? { imageUrl: userProfile?.avatar, prompt: "Animate this profile picture with subtle, natural movement" }
+        : { bio: userProfile?.bio, displayName: userProfile?.displayName }
+
+      const response = await fetch(apiEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Video generation failed")
+      }
+
+      const data = await response.json()
+
+      if (data.success && data.videoUrl) {
+        setGeneratedVideoUrl(data.videoUrl)
+        toast.success("Video generated!")
+      } else {
+        throw new Error(data.error || "Failed to generate video")
+      }
+    } catch (error) {
+      console.error("Generation error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate video"
+      toast.error(errorMessage)
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
-  const handleBioToVideo = async () => {
-    if (!userProfile?.bio) return
-    setIsGenerating(true)
-    // TODO: Implement bio-to-video generation
-    console.log("Generating video from bio:", userProfile?.bio)
+  const handleAnimateProfile = () => handlePaymentAndGenerate("profile")
+  const handleBioToVideo = () => handlePaymentAndGenerate("bio")
+
+  const handlePostVideo = () => {
+    if (!generatedVideoUrl) return
+
+    if (sdk?.actions?.composeCast) {
+      const castText = generationType === "profile"
+        ? `Check out my animated profile! 🎬✨\n\n${generatedVideoUrl}`
+        : `Video generated from my bio! 🎬✨\n\n${generatedVideoUrl}`
+
+      sdk.actions.composeCast({
+        text: castText,
+      })
+    }
+
+    // Close modal and reset
+    setGeneratedVideoUrl(null)
+    setGenerationType(null)
   }
 
   if (isLoading) {
@@ -194,8 +318,42 @@ export function DiscoverPage() {
             <p className="text-sm text-gray-300 mb-1">💡 How it works</p>
             <p className="text-xs text-gray-400">
               We use your Farcaster profile data to create personalized AI-generated videos.
-              Each video is unique and based on your actual profile information.
+              Each video is unique and based on your actual profile information. Cost: 0.25 USDC per video.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Video Preview Modal */}
+      {generatedVideoUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div className="relative w-full max-w-md">
+            <button
+              onClick={() => setGeneratedVideoUrl(null)}
+              className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <div className="overflow-hidden rounded-xl bg-[#1A1A1A]">
+              <video
+                src={generatedVideoUrl}
+                controls
+                autoPlay
+                loop
+                className="w-full aspect-[9/16]"
+              />
+              <div className="p-4">
+                <p className="text-sm text-gray-400 mb-3">
+                  Your {generationType === "profile" ? "animated profile" : "bio video"} is ready!
+                </p>
+                <button
+                  onClick={handlePostVideo}
+                  className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-sm font-semibold text-white hover:scale-[1.02] transition-all"
+                >
+                  Share to Farcaster
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
