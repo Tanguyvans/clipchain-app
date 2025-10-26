@@ -207,9 +207,10 @@ export function DiscoverPage() {
       console.log("📤 Posting video to Farcaster:", generatedVideoUrl)
       console.log("📝 Generation type:", generationType)
 
+      // Include video URL in the text for better visibility
       const castText = generationType === "profile"
-        ? `Check out my animated profile! 💃✨\n\nGenerated with @clipchain`
-        : `Watch me present my bio! 🎤✨\n\nGenerated with @clipchain`
+        ? `Check out my animated profile! 💃✨\n\n${generatedVideoUrl}\n\nGenerated with @clipchain`
+        : `Watch me present my bio! 🎤✨\n\n${generatedVideoUrl}\n\nGenerated with @clipchain`
 
       console.log("🎬 Calling composeCast with:", { text: castText, embeds: [generatedVideoUrl], channelKey: "clipchain" })
 
