@@ -2,6 +2,7 @@
 
 import { ChevronLeft, MoreVertical, CheckCircle2, Play } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 interface VideoGridItem {
   id: string
@@ -30,6 +31,7 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
 }: ProfilePageProps) {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
 
   const stats = [
@@ -150,6 +152,7 @@ export function ProfilePage({
           {displayVideos.map((video, index) => (
             <div
               key={video.id}
+              onClick={() => router.push(`/?videoId=${video.id}`)}
               className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-lg"
             >
               <div className={`h-full w-full ${gradients[index % gradients.length]}`}>

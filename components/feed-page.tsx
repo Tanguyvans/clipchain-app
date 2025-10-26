@@ -1,16 +1,32 @@
 "use client"
 
 import { Heart, MessageCircle, Repeat2, Share2, Sparkles, CheckCircle2, Volume2, VolumeX } from "lucide-react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import type { VideoData } from "@/types/clipchain"
 
 interface FeedPageProps {
   videos: VideoData[]
+  initialVideoId?: string | null
 }
 
-export function FeedPage({ videos }: FeedPageProps) {
+export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
   const [isMuted, setIsMuted] = useState(false) // Start unmuted
   const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Scroll to initial video if specified
+  useEffect(() => {
+    if (initialVideoId && containerRef.current) {
+      const videoIndex = videos.findIndex(v => v.id === initialVideoId)
+      if (videoIndex !== -1) {
+        // Scroll to the video
+        const videoElement = containerRef.current.children[videoIndex] as HTMLElement
+        if (videoElement) {
+          videoElement.scrollIntoView({ behavior: 'smooth' })
+        }
+      }
+    }
+  }, [initialVideoId, videos])
 
   const toggleMute = () => {
     const newMutedState = !isMuted
@@ -50,7 +66,7 @@ export function FeedPage({ videos }: FeedPageProps) {
         )}
       </button>
 
-      <div className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
+      <div ref={containerRef} className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
         {videos.map((video, index) => (
           <VideoCard key={video.id} video={video} index={index} isMuted={isMuted} videoRefs={videoRefs} />
         ))}
