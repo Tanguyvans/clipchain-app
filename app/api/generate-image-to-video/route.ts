@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as fal from "@fal-ai/serverless-client";
+import { requestRefund } from "@/lib/refund";
 
 // Configure Fal AI
 fal.config({
@@ -7,6 +8,9 @@ fal.config({
 });
 
 export async function POST(request: NextRequest) {
+  let transactionHash = "";
+  let userWalletAddress = "";
+
   try {
     // Check if FAL_KEY is loaded
     if (!process.env.FAL_KEY) {
@@ -17,7 +21,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { imageUrl, prompt } = await request.json();
+    const body = await request.json();
+    const { imageUrl, prompt, transactionHash: txHash, userWalletAddress: wallet } = body;
+
+    // Store for potential refund
+    transactionHash = txHash || "";
+    userWalletAddress = wallet || "";
 
     if (!imageUrl || typeof imageUrl !== "string") {
       return NextResponse.json(
@@ -72,10 +81,22 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("❌ Image-to-video generation failed:", error);
 
+    // Request refund if we have payment details
+    if (transactionHash && userWalletAddress) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      await requestRefund(
+        transactionHash,
+        userWalletAddress,
+        `Image-to-video generation failed: ${errorMessage}`
+      );
+      console.log("💸 Refund requested for transaction:", transactionHash);
+    }
+
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : "Failed to generate video from image",
+        refundRequested: !!(transactionHash && userWalletAddress),
       },
       { status: 500 }
     );

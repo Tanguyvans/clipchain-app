@@ -111,6 +111,8 @@ export function DiscoverPage() {
       setGenerationType(type)
 
       const isDevelopment = process.env.NODE_ENV === 'development'
+      let transactionHash = "dev_tx_" + Date.now()
+      let userWalletAddress = ""
 
       // Handle payment
       if (isMiniKitReady && sdk?.actions) {
@@ -136,8 +138,12 @@ export function DiscoverPage() {
               return
             }
 
-            // Payment successful
-            console.log("Payment transaction:", paymentResult.send.transaction)
+            // Payment successful - save transaction details for potential refund
+            transactionHash = paymentResult.send.transaction
+            // Get user's wallet address from the payment result or auth context
+            userWalletAddress = walletAddress || authUserData?.address || ""
+            console.log("Payment transaction:", transactionHash)
+            console.log("User wallet:", userWalletAddress)
             toast.success("Payment confirmed! Generating video...")
           } catch (paymentError) {
             console.error("Payment error:", paymentError)
@@ -155,8 +161,18 @@ export function DiscoverPage() {
       // Generate video based on type
       const apiEndpoint = type === "profile" ? "/api/generate-image-to-video" : "/api/generate-bio-video"
       const requestBody = type === "profile"
-        ? { imageUrl: userProfile?.avatar, prompt: "Animate this profile picture with subtle, natural movement" }
-        : { bio: userProfile?.bio, displayName: userProfile?.displayName }
+        ? {
+            imageUrl: userProfile?.avatar,
+            prompt: "Animate this profile picture with subtle, natural movement",
+            transactionHash,
+            userWalletAddress
+          }
+        : {
+            bio: userProfile?.bio,
+            displayName: userProfile?.displayName,
+            transactionHash,
+            userWalletAddress
+          }
 
       const response = await fetch(apiEndpoint, {
         method: "POST",
@@ -175,12 +191,23 @@ export function DiscoverPage() {
         setGeneratedVideoUrl(data.videoUrl)
         toast.success("Video generated!")
       } else {
-        throw new Error(data.error || "Failed to generate video")
+        // Show error message with refund info if applicable
+        const errorMsg = data.error || "Failed to generate video"
+
+        if (data.refundRequested) {
+          toast.error(`${errorMsg}. A refund of 0.25 USDC has been requested and will be processed.`, {
+            duration: 8000,
+          })
+          console.log("🔄 Refund has been requested for failed generation")
+        } else {
+          toast.error(errorMsg)
+        }
+
+        throw new Error(errorMsg)
       }
     } catch (error) {
       console.error("Generation error:", error)
-      const errorMessage = error instanceof Error ? error.message : "Failed to generate video"
-      toast.error(errorMessage)
+      // Error already shown via toast above
     } finally {
       setIsGenerating(false)
     }
@@ -228,8 +255,26 @@ export function DiscoverPage() {
         </div>
       </div>
 
-      {/* Content */}
-      {userProfile && (
+      {/* Loading State - Show during generation */}
+      {isGenerating && (
+        <div className="flex min-h-[70vh] items-center justify-center">
+          <div className="space-y-4 text-center">
+            <Loader2 className="mx-auto h-16 w-16 animate-spin text-purple-500" />
+            <div>
+              <p className="text-xl font-semibold text-white">Generating Your Video...</p>
+              <p className="text-sm text-gray-400 mt-2">
+                This may take 30-60 seconds
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Please don't close the app
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content - Hide during generation */}
+      {userProfile && !isGenerating && !generatedVideoUrl && (
         <div className="p-4 space-y-4">
           {/* Animate Profile Picture */}
           <div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-6">
@@ -324,35 +369,64 @@ export function DiscoverPage() {
         </div>
       )}
 
-      {/* Video Preview Modal */}
+      {/* Video Preview - Full Screen */}
       {generatedVideoUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-          <div className="relative w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#0A0A0A]">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
+            <h2 className="text-xl font-bold text-white">Preview Your Video</h2>
             <button
               onClick={() => setGeneratedVideoUrl(null)}
-              className="absolute -top-12 right-0 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
-            <div className="overflow-hidden rounded-xl bg-[#1A1A1A]">
-              <video
-                src={generatedVideoUrl}
-                controls
-                autoPlay
-                loop
-                className="w-full aspect-[9/16]"
-              />
-              <div className="p-4">
-                <p className="text-sm text-gray-400 mb-3">
-                  Your {generationType === "profile" ? "animated profile" : "bio video"} is ready!
-                </p>
-                <button
-                  onClick={handlePostVideo}
-                  className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 px-4 py-3 text-sm font-semibold text-white hover:scale-[1.02] transition-all"
-                >
-                  Share to Farcaster
-                </button>
+          </div>
+
+          {/* Video Preview */}
+          <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="mx-auto max-w-md">
+              <div className="relative aspect-[9/16] overflow-hidden rounded-xl bg-black">
+                <video
+                  src={generatedVideoUrl}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
               </div>
+
+              {/* Info Card */}
+              <div className="mt-4 rounded-xl border border-gray-800 bg-[#1A1A1A] p-4">
+                <p className="text-sm text-gray-400">Generated from:</p>
+                <p className="mt-1 font-medium text-white">
+                  {generationType === "profile" ? "Your Profile Picture" : "Your Bio"}
+                </p>
+                {generationType === "bio" && userProfile?.bio && (
+                  <p className="mt-2 text-sm text-gray-400 italic">
+                    &ldquo;{userProfile.bio}&rdquo;
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="shrink-0 border-t border-gray-800 px-6 pb-6 pt-4">
+            <div className="mx-auto max-w-md space-y-3">
+              <button
+                onClick={handlePostVideo}
+                className="h-14 w-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                Share to Farcaster ✨
+              </button>
+              <button
+                onClick={() => setGeneratedVideoUrl(null)}
+                className="h-12 w-full rounded-full border-2 border-gray-700 text-sm font-semibold text-gray-300 transition-all hover:border-gray-600 hover:bg-gray-800"
+              >
+                Back to Discover
+              </button>
             </div>
           </div>
         </div>
