@@ -281,16 +281,6 @@ export function CreateModal({ isOpen, onClose }: CreateModalProps) {
                   ))}
                 </div>
               </div>
-
-              {/* Cost Card */}
-              <div className="mx-6 mb-4 rounded-xl border border-orange-500/20 bg-orange-500/10 p-4">
-                <p className="text-sm text-orange-300">
-                  💰 Cost: <span className="font-bold">0.25 USDC</span>
-                </p>
-                <p className="mt-1 text-xs text-gray-400">
-                  Payment via Base network (low gas fees)
-                </p>
-              </div>
             </>
           )}
 
