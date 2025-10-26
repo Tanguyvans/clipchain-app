@@ -40,6 +40,13 @@ export async function POST(request: NextRequest) {
     console.log("📝 Prompt:", prompt || "default animation");
     console.log("🔑 FAL_KEY present:", !!process.env.FAL_KEY);
 
+    // Validate image URL
+    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+      throw new Error(`Invalid image URL format: ${imageUrl}. Must be a valid HTTP/HTTPS URL.`);
+    }
+
+    console.log("✅ Image URL validation passed");
+
     // Generate video using Fal AI Sora 2 image-to-video
     console.log("🚀 Starting Fal AI image-to-video generation...");
 
