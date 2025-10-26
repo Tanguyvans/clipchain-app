@@ -16,8 +16,8 @@ export const minikitConfig = {
   miniapp: {
     version: "1",
     name: "ClipChain",
-    subtitle: "AI video generation",
-    description: "Generate AI-powered videos from your content",
+    subtitle: "AI video generation platform",
+    description: "Create stunning AI-powered videos from text prompts, animate your profile picture with dancing moves, or generate professional bio presentations. Share your creations in the /clipchain channel!",
     screenshotUrls: [`${ROOT_URL}/portrait.png`],
     iconUrl: `${ROOT_URL}/icon.png`,
     splashImageUrl: `${ROOT_URL}/banner.png`,
@@ -27,9 +27,9 @@ export const minikitConfig = {
     primaryCategory: "social",
     tags: ["ai", "video", "content-creation", "social"],
     heroImageUrl: `${ROOT_URL}/banner.png`,
-    tagline: "",
-    ogTitle: "",
-    ogDescription: "",
+    tagline: "AI-powered video creation",
+    ogTitle: "ClipChain - AI Video Generation",
+    ogDescription: "Create stunning AI-powered videos with ClipChain. Animate your profile, generate bio presentations, and share on Farcaster.",
     ogImageUrl: `${ROOT_URL}/banner.png`,
   },
   "baseBuilder": {
