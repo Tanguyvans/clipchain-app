@@ -172,6 +172,7 @@ export function DiscoverPage() {
             userWalletAddress
           }
         : {
+            imageUrl: userProfile?.avatar,
             bio: userProfile?.bio,
             displayName: userProfile?.displayName,
             transactionHash,

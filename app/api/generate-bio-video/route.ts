@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bio, displayName, transactionHash: txHash, userWalletAddress: wallet } = body;
+    const { imageUrl, bio, displayName, transactionHash: txHash, userWalletAddress: wallet } = body;
 
     // Store for potential refund
     transactionHash = txHash || "";
@@ -35,25 +35,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("=== 🎬 BIO-TO-VIDEO GENERATION REQUEST ===");
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return NextResponse.json(
+        { success: false, error: "Profile image URL is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate image URL
+    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+      throw new Error(`Invalid image URL format: ${imageUrl}`);
+    }
+
+    console.log("=== 🎬 BIO SPEECH PRESENTATION GENERATION REQUEST ===");
     console.log("👤 Display Name:", displayName);
     console.log("📝 Bio:", bio);
+    console.log("🖼️  Image URL:", imageUrl);
     console.log("🔑 FAL_KEY present:", !!process.env.FAL_KEY);
 
     // Create a short summary of the bio (first 100 chars or full bio if shorter)
     const bioSummary = bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
 
-    // Create a presentation-style prompt where the person is giving a speech
-    const enhancedPrompt = `A professional presenter ${displayName ? `named ${displayName}` : ""} standing confidently and making a speech presentation. They are explaining: "${bioSummary}". Professional setting with good lighting, engaging body language, gesturing while speaking, cinematic camera angle, professional video production quality.`;
+    // Create a presentation-style prompt where the person in the image is giving a speech
+    const speechPrompt = `The person in this image is a professional presenter ${displayName ? `named ${displayName}` : ""} giving a confident speech presentation. They are explaining: "${bioSummary}". Professional setting with excellent lighting, engaging body language, animated gesturing while speaking to the audience, expressive facial expressions, dynamic movement, cinematic camera angle, professional video production quality, 8 seconds of compelling presentation.`;
 
-    console.log("🎨 Enhanced prompt:", enhancedPrompt);
+    console.log("🎨 Speech presentation prompt:", speechPrompt);
 
-    // Generate video using Fal AI Sora 2
-    console.log("🚀 Starting Fal AI text-to-video generation from bio...");
+    // Generate video using Fal AI Sora 2 image-to-video
+    console.log("🚀 Starting Fal AI image-to-video generation for bio speech...");
 
-    const result = await fal.subscribe("fal-ai/sora-2/text-to-video", {
+    const result = await fal.subscribe("fal-ai/sora-2/image-to-video", {
       input: {
-        prompt: enhancedPrompt,
+        image_url: imageUrl,
+        prompt: speechPrompt,
         resolution: "720p",
         aspect_ratio: "9:16", // Vertical for mobile
         duration: 8, // 8 seconds for speech presentation
@@ -94,7 +108,7 @@ export async function POST(request: NextRequest) {
       await requestRefund(
         transactionHash,
         userWalletAddress,
-        `Bio-to-video generation failed: ${errorMessage}`
+        `Bio speech presentation generation failed: ${errorMessage}`
       );
       console.log("💸 Refund requested for transaction:", transactionHash);
     }
@@ -102,7 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to generate video from bio",
+        error: error instanceof Error ? error.message : "Failed to generate bio speech presentation",
         refundRequested: !!(transactionHash && userWalletAddress),
       },
       { status: 500 }
