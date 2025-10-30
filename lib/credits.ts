@@ -274,7 +274,7 @@ export async function saveVideoTemplate(
   videoUrl: string,
   prompt: string,
   generationType: 'profile' | 'bio' | 'text',
-  settings: Record<string, any>,
+  settings: Record<string, unknown>,
   castHash?: string,
   castUrl?: string
 ) {

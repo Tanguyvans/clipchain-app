@@ -33,7 +33,7 @@ export interface VideoTemplate {
   thumbnail_url: string | null
   generation_type: 'profile' | 'bio' | 'text'
   prompt: string
-  settings: Record<string, any>
+  settings: Record<string, unknown>
   cast_hash: string | null
   cast_url: string | null
   uses_count: number
