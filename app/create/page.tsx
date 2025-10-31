@@ -342,20 +342,21 @@ export default function CreatePage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-[#0A0A0A]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
-          <h2 className="text-xl font-bold text-white">Preview Your Video</h2>
+        <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
+          <h2 className="text-lg font-bold text-white">Preview Your Video</h2>
           <button
             onClick={() => setGeneratedVideoUrl(null)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-800 text-white hover:bg-gray-700 transition-colors"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Video Preview */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
-          <div className="mx-auto max-w-md">
-            <div className="relative aspect-[9/16] overflow-hidden rounded-xl bg-black">
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            {/* Video Preview */}
+            <div className="relative aspect-[9/16] max-w-sm mx-auto overflow-hidden rounded-xl bg-black">
               <video
                 src={generatedVideoUrl}
                 controls
@@ -367,13 +368,13 @@ export default function CreatePage() {
             </div>
 
             {/* Info Card */}
-            <div className="mt-4 rounded-xl border border-gray-800 bg-[#1A1A1A] p-4">
-              <p className="text-sm text-gray-400">Generated from:</p>
-              <p className="mt-1 font-medium text-white">
+            <div className="mt-3 rounded-xl border border-gray-800 bg-[#1A1A1A] p-3 max-w-sm mx-auto">
+              <p className="text-xs text-gray-400">Generated from:</p>
+              <p className="mt-1 text-sm font-medium text-white">
                 {selectedType === "profile" ? "Your Profile Picture" : "Your Bio"}
               </p>
               {selectedType === "bio" && userProfile?.bio && (
-                <p className="mt-2 text-sm text-gray-400 italic">
+                <p className="mt-2 text-xs text-gray-400 italic line-clamp-2">
                   &ldquo;{userProfile.bio}&rdquo;
                 </p>
               )}
@@ -381,18 +382,18 @@ export default function CreatePage() {
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="shrink-0 border-t border-gray-800 px-6 pb-6 pt-4">
-          <div className="mx-auto max-w-md space-y-3">
+        {/* Fixed Footer Actions */}
+        <div className="shrink-0 border-t border-gray-800 px-4 py-4 bg-[#0A0A0A]">
+          <div className="space-y-2 max-w-sm mx-auto">
             <button
               onClick={handlePostVideo}
-              className="h-14 w-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-lg font-bold text-white shadow-xl shadow-orange-500/40 transition-all hover:scale-[1.02] active:scale-95"
+              className="h-12 w-full rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-base font-bold text-white shadow-xl shadow-orange-500/40 transition-all active:scale-95"
             >
               Share to Farcaster ✨
             </button>
             <button
               onClick={() => setGeneratedVideoUrl(null)}
-              className="h-12 w-full rounded-full border-2 border-gray-700 text-sm font-semibold text-gray-300 transition-all hover:border-gray-600 hover:bg-gray-800"
+              className="h-10 w-full rounded-full border-2 border-gray-700 text-sm font-semibold text-gray-300 transition-all hover:border-gray-600 hover:bg-gray-800"
             >
               Back to Create
             </button>
