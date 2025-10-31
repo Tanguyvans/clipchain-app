@@ -168,7 +168,7 @@ export default function CreatePage() {
           <div className="bg-[#1A1A1A] rounded-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-white mb-2">Coming Soon! 🚀</h3>
             <p className="text-sm text-gray-400 mb-4">
-              Template browser is being built. You'll be able to browse and use templates created by the community.
+              Template browser is being built. You&apos;ll be able to browse and use templates created by the community.
             </p>
             <button
               onClick={() => setShowTemplates(false)}
