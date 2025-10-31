@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Sparkles, Loader2, X, Plus } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
-import { DEFAULT_TEMPLATES } from "@/lib/default-templates"
 import { sdk } from "@farcaster/miniapp-sdk"
 import { toast } from "sonner"
 import { useAccount, useConnect } from "wagmi"
@@ -37,6 +36,10 @@ export default function CreatePage() {
   const [generationPrompt, setGenerationPrompt] = useState<string>("")
   const [, setErrorMessage] = useState<string | null>(null)
   const [, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
+  const [templates, setTemplates] = useState<any[]>([])
+  const [officialTemplates, setOfficialTemplates] = useState<any[]>([])
+  const [userTemplates, setUserTemplates] = useState<any[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(true)
 
   // Fetch user's profile including bio
   useEffect(() => {
@@ -71,6 +74,29 @@ export default function CreatePage() {
 
     fetchUserProfile()
   }, [walletAddress, authUserData])
+
+  // Fetch templates from database
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      setTemplatesLoading(true)
+      try {
+        const response = await fetch('/api/templates/trending?limit=20')
+        const data = await response.json()
+
+        if (data.success) {
+          setTemplates(data.templates)
+          setOfficialTemplates(data.officialTemplates || [])
+          setUserTemplates(data.userTemplates || [])
+        }
+      } catch (error) {
+        console.error("Error fetching templates:", error)
+      } finally {
+        setTemplatesLoading(false)
+      }
+    }
+
+    fetchTemplates()
+  }, [])
 
   // Check MiniKit availability and auto-connect wallet
   useEffect(() => {
@@ -364,37 +390,135 @@ export default function CreatePage() {
         </div>
       </div>
 
-      {/* Template Grid */}
-      <div className="p-4 grid grid-cols-2 gap-4">
-        {DEFAULT_TEMPLATES.map((template) => (
-          <button
-            key={template.id}
-            onClick={() => handlePaymentAndGenerate(template.generationType)}
-            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-800 hover:border-orange-500/50 transition-all active:scale-95"
-          >
-            {/* Video Frame Preview */}
-            <div className={`aspect-[9/16] bg-gradient-to-br ${template.gradient} flex items-center justify-center relative`}>
-              <div className="absolute inset-0 bg-black/20" />
-              <span className="text-6xl z-10">{template.emoji}</span>
-
-              {/* Play Overlay */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center">
-                  <div className="w-0 h-0 border-l-[16px] border-l-white border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent ml-1" />
-                </div>
-              </div>
+      {/* Templates Section */}
+      <div className="pb-32">
+        {/* Official Templates Section */}
+        {!templatesLoading && officialTemplates.length > 0 && (
+          <div className="mb-6">
+            <div className="px-4 py-3 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-b border-orange-500/20">
+              <h2 className="text-sm font-bold text-orange-400">✨ Official Templates</h2>
             </div>
+            <div className="p-2 grid grid-cols-2 gap-2">
+              {officialTemplates.map((template) => {
+                const videoUrl = template.video_url
+                const emoji = template.emoji
+                const gradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
 
-            {/* Template Info */}
-            <div className="p-3 bg-[#0A0A0A]">
-              <h3 className="text-sm font-bold text-white mb-1 line-clamp-1">{template.name}</h3>
-              <p className="text-xs text-gray-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                <span>0 generated</span>
-              </p>
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => handlePaymentAndGenerate(template.generation_type)}
+                    className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
+                  >
+                    {/* Video Thumbnail */}
+                    {videoUrl ? (
+                      <div className="aspect-[3/4] relative bg-black">
+                        <video
+                          src={videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 bg-black/10" />
+                      </div>
+                    ) : (
+                      <div className={`aspect-[3/4] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+                        <div className="absolute inset-0 bg-black/20" />
+                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl">{emoji}</span>}
+                      </div>
+                    )}
+
+                    {/* Title Overlay (bottom) */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+                      <h3 className="text-sm font-semibold text-white leading-tight mb-1 line-clamp-2">
+                        {template.name}
+                      </h3>
+                      <p className="text-xs text-gray-300 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>{template.uses_count || 0} uses</span>
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
-          </button>
-        ))}
+          </div>
+        )}
+
+        {/* User Templates Section */}
+        {!templatesLoading && userTemplates.length > 0 && (
+          <div>
+            <div className="px-4 py-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-b border-purple-500/20">
+              <h2 className="text-sm font-bold text-purple-400">🌟 Community Templates</h2>
+            </div>
+            <div className="p-2 grid grid-cols-2 gap-2">
+              {userTemplates.map((template) => {
+                const displayName = `${template.name || 'Template'} by @${template.creator?.username || 'user'}`
+                const videoUrl = template.video_url
+                const emoji = template.emoji
+                const gradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
+
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => handlePaymentAndGenerate(template.generation_type)}
+                    className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
+                  >
+                    {/* Video Thumbnail */}
+                    {videoUrl ? (
+                      <div className="aspect-[3/4] relative bg-black">
+                        <video
+                          src={videoUrl}
+                          className="w-full h-full object-cover"
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 bg-black/10" />
+                      </div>
+                    ) : (
+                      <div className={`aspect-[3/4] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
+                        <div className="absolute inset-0 bg-black/20" />
+                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl">{emoji}</span>}
+                      </div>
+                    )}
+
+                    {/* Title Overlay (bottom) */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+                      <h3 className="text-sm font-semibold text-white leading-tight mb-1 line-clamp-2">
+                        {displayName}
+                      </h3>
+                      <p className="text-xs text-gray-300 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>{template.uses_count || 0} uses</span>
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {templatesLoading && (
+          <div className="p-2 grid grid-cols-2 gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] bg-gray-900 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {/* No Templates State */}
+        {!templatesLoading && templates.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-sm">No templates available yet</p>
+            <p className="text-gray-500 text-xs mt-1">Generate and share videos to create templates!</p>
+          </div>
+        )}
       </div>
 
       {/* Floating Create Custom Button */}
