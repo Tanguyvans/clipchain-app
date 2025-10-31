@@ -58,7 +58,6 @@ export default function CreatePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isMiniKitReady, setIsMiniKitReady] = useState(false)
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null)
-  const [generationPrompt, setGenerationPrompt] = useState<string>("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [, setErrorMessage] = useState<string | null>(null)
   const [, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
@@ -211,14 +210,10 @@ export default function CreatePage() {
       // Build request body
       const baseBody = { imageUrl: userProfile?.avatar, transactionHash, userWalletAddress }
       const profilePrompt = "Animate this profile picture with subtle, natural movement"
-      const bioPrompt = `Create a professional speech presentation about: ${userProfile?.bio}`
 
       const requestBody = type === "profile"
         ? { ...baseBody, prompt: profilePrompt }
         : { ...baseBody, bio: userProfile?.bio, displayName: userProfile?.displayName }
-
-      // Save the prompt for template creation later
-      setGenerationPrompt(type === "profile" ? profilePrompt : bioPrompt)
 
       // Call generation API
       const apiEndpoint = type === "profile" ? "/api/generate-image-to-video" : "/api/generate-bio-video"
@@ -309,7 +304,6 @@ export default function CreatePage() {
     // Close modal and reset
     setGeneratedVideoUrl(null)
     setSelectedType(null)
-    setGenerationPrompt("")
   }
 
   // Show loading state
