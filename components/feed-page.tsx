@@ -79,41 +79,56 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
 
     const observer = new IntersectionObserver(
       (entries) => {
+        // Find the video that's most in view
+        let mostVisibleEntry = entries[0]
+        let maxRatio = 0
+
+        entries.forEach((entry) => {
+          if (entry.intersectionRatio > maxRatio) {
+            maxRatio = entry.intersectionRatio
+            mostVisibleEntry = entry
+          }
+        })
+
+        // Pause all videos first
         entries.forEach((entry) => {
           const videoId = entry.target.getAttribute('data-video-id')
           const videoElement = videoId ? videoRefs.current.get(videoId) : null
-
-          if (entry.isIntersecting && videoElement) {
-            // Video is in view - play it
-            console.log(`📹 Video ${videoId} is in view`)
-            setCurrentVideoId(videoId)
-
-            // Always start muted to allow autoplay
-            videoElement.muted = true
-            videoElement.play()
-              .then(() => {
-                console.log(`✅ Video ${videoId} playing`)
-                // Successfully playing, now unmute if user has interacted and wants sound
-                if (hasInteracted && !isMuted) {
-                  // Small delay to ensure video is playing before unmuting
-                  setTimeout(() => {
-                    videoElement.muted = false
-                    console.log(`🔊 Unmuted video ${videoId}, hasInteracted: ${hasInteracted}, isMuted: ${isMuted}`)
-                  }, 100)
-                }
-              })
-              .catch(err => console.warn(`Play failed for ${videoId}:`, err))
-          } else if (videoElement) {
-            // Video is out of view - pause and mute it
-            console.log(`📹 Video ${videoId} is out of view`)
+          if (videoElement && videoElement !== videoRefs.current.get(mostVisibleEntry.target.getAttribute('data-video-id') || '')) {
             videoElement.pause()
             videoElement.currentTime = 0
           }
         })
+
+        // Play only the most visible video
+        const videoId = mostVisibleEntry.target.getAttribute('data-video-id')
+        const videoElement = videoId ? videoRefs.current.get(videoId) : null
+
+        if (mostVisibleEntry.isIntersecting && videoElement && maxRatio > 0.3) {
+          // Video is in view - play it
+          console.log(`📹 Video ${videoId} is in view (${(maxRatio * 100).toFixed(0)}% visible)`)
+          setCurrentVideoId(videoId)
+
+          // Always start muted to allow autoplay
+          videoElement.muted = true
+          videoElement.play()
+            .then(() => {
+              console.log(`✅ Video ${videoId} playing`)
+              // Successfully playing, now unmute if user has interacted and wants sound
+              if (hasInteracted && !isMuted) {
+                // Small delay to ensure video is playing before unmuting
+                setTimeout(() => {
+                  videoElement.muted = false
+                  console.log(`🔊 Unmuted video ${videoId}, hasInteracted: ${hasInteracted}, isMuted: ${isMuted}`)
+                }, 100)
+              }
+            })
+            .catch(err => console.warn(`Play failed for ${videoId}:`, err))
+        }
       },
       {
         root: containerRef.current,
-        threshold: 0.5, // Video must be 50% visible
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], // Multiple thresholds for better detection
       }
     )
 
@@ -158,7 +173,11 @@ export function FeedPage({ videos, initialVideoId }: FeedPageProps) {
         )}
       </button>
 
-      <div ref={containerRef} className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
+      <div
+        ref={containerRef}
+        className="h-screen snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
+        style={{ scrollSnapType: 'y mandatory' }}
+      >
         {videos.map((video, index) => (
           <VideoCard key={video.id} video={video} index={index} videoRefs={videoRefs} />
         ))}
@@ -190,7 +209,11 @@ function VideoCard({
   const bgGradient = gradients[index % gradients.length]
 
   return (
-    <div className="relative min-h-screen snap-start" data-video-id={video.id}>
+    <div
+      className="relative min-h-screen snap-start snap-always"
+      data-video-id={video.id}
+      style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always' }}
+    >
       {/* Video Container */}
       <div className="relative h-screen w-full overflow-hidden">
         {/* Background - Video or Image would go here */}
