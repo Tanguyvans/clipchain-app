@@ -28,7 +28,7 @@ INSERT INTO video_templates (
     NULL, -- Preview video - will show emoji until we add an example
     NULL,
     'profile',
-    'Animate this profile picture with subtle, natural movement',
+    'Make this profile picture dance with wild, energetic movements - crazy spins, flips, head bobbing, and explosive dance moves with dramatic camera angles and dynamic motion',
     '{"duration": 5, "style": "dance"}'::jsonb,
     0,
     true,

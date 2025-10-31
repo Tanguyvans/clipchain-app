@@ -207,12 +207,20 @@ export default function CreatePage() {
       // Process payment
       const { transactionHash, userWalletAddress } = await processPayment()
 
+      // Get the prompt from the selected template if available
+      let promptToUse = "Animate this profile picture with subtle, natural movement" // default fallback
+      if (templateId) {
+        const selectedTemplate = [...officialTemplates, ...userTemplates].find(t => t.id === templateId)
+        if (selectedTemplate?.prompt) {
+          promptToUse = selectedTemplate.prompt
+        }
+      }
+
       // Build request body
       const baseBody = { imageUrl: userProfile?.avatar, transactionHash, userWalletAddress }
-      const profilePrompt = "Animate this profile picture with subtle, natural movement"
 
       const requestBody = type === "profile"
-        ? { ...baseBody, prompt: profilePrompt }
+        ? { ...baseBody, prompt: promptToUse }
         : { ...baseBody, bio: userProfile?.bio, displayName: userProfile?.displayName }
 
       // Call generation API
