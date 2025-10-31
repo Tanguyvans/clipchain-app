@@ -263,7 +263,7 @@ export default function CreatePage() {
     if (!generatedVideoUrl || !selectedType) return
 
     try {
-      // If user used a template, track the usage
+      // If user used an existing template, track the usage
       if (selectedTemplateId && authUserData?.fid) {
         try {
           const trackResponse = await fetch("/api/templates/use", {
@@ -284,33 +284,9 @@ export default function CreatePage() {
           console.error("Failed to track template usage:", trackError)
         }
       }
-
-      // Save as NEW template to database (creates community template)
-      if (authUserData?.fid && generationPrompt) {
-        try {
-          const templateResponse = await fetch("/api/templates/save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              creatorFid: authUserData.fid,
-              videoUrl: generatedVideoUrl,
-              prompt: generationPrompt,
-              generationType: selectedType,
-              settings: {
-                duration: selectedType === "profile" ? 5 : 10,
-                style: selectedType === "profile" ? "dance" : "speech",
-              },
-            }),
-          })
-
-          const templateData = await templateResponse.json()
-          if (templateData.success) {
-            console.log("✅ Template saved:", templateData.template.id)
-          }
-        } catch (templateError) {
-          console.error("Failed to save template:", templateError)
-        }
-      }
+      // If user did NOT use a template, they created something custom
+      // In the future, we'll save custom videos as new community templates
+      // For now, we only track usage of existing templates
 
       // Include video URL in the text for better visibility
       const castText = selectedType === "profile"
