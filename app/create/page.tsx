@@ -352,33 +352,17 @@ export default function CreatePage() {
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4">
-            {/* Video Preview */}
-            <div className="relative aspect-[9/16] max-w-sm mx-auto overflow-hidden rounded-xl bg-black">
-              <video
-                src={generatedVideoUrl}
-                controls
-                autoPlay
-                loop
-                playsInline
-                className="h-full w-full object-cover"
-              />
-            </div>
-
-            {/* Info Card */}
-            <div className="mt-3 rounded-xl border border-gray-800 bg-[#1A1A1A] p-3 max-w-sm mx-auto">
-              <p className="text-xs text-gray-400">Generated from:</p>
-              <p className="mt-1 text-sm font-medium text-white">
-                {selectedType === "profile" ? "Your Profile Picture" : "Your Bio"}
-              </p>
-              {selectedType === "bio" && userProfile?.bio && (
-                <p className="mt-2 text-xs text-gray-400 italic line-clamp-2">
-                  &ldquo;{userProfile.bio}&rdquo;
-                </p>
-              )}
-            </div>
+        {/* Video Preview - Centered and Compact */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="relative w-64 aspect-[9/16] overflow-hidden rounded-2xl bg-black shadow-2xl">
+            <video
+              src={generatedVideoUrl}
+              controls
+              autoPlay
+              loop
+              playsInline
+              className="h-full w-full object-cover"
+            />
           </div>
         </div>
 
