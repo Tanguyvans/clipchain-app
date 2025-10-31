@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { useAccount, useConnect } from "wagmi";
 
@@ -11,6 +11,8 @@ interface UserData {
   displayName?: string;
   pfpUrl?: string;
   address?: string;
+  credits?: number;
+  streak?: number;
 }
 
 interface AuthContextType {
@@ -22,6 +24,7 @@ interface AuthContextType {
   signOut: () => void;
   walletAddress: string | undefined;
   isWalletConnected: boolean;
+  refreshCredits: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +41,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-load user data from Farcaster context on mount
+  useEffect(() => {
+    async function loadUserFromContext() {
+      try {
+        const context = await sdk.context;
+        if (context.user) {
+          // Set basic user data from Farcaster context
+          setUserData({
+            fid: context.user.fid,
+            username: context.user.username,
+            displayName: context.user.displayName,
+            pfpUrl: context.user.pfpUrl,
+            address: walletAddress,
+          });
+
+          // Fetch credits from database (auto-creates user with 3 free credits if new)
+          fetch(`${BACKEND_ORIGIN}/api/credits?fid=${context.user.fid}${walletAddress ? `&wallet=${walletAddress}` : ''}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                setUserData(prev => prev ? {
+                  ...prev,
+                  credits: data.credits,
+                  streak: data.streak,
+                } : null);
+
+                if (data.isNewUser) {
+                  console.log('🎉 Welcome! You received 3 free credits!');
+                }
+              }
+            })
+            .catch(err => console.error('Failed to fetch credits:', err));
+        }
+      } catch (error) {
+        console.error('Failed to load user context:', error);
+      }
+    }
+
+    loadUserFromContext();
+  }, [walletAddress]);
 
   const signIn = useCallback(async () => {
     setIsLoading(true);
@@ -92,7 +136,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserData(null);
   }, []);
 
-  const isAuthenticated = !!token && !!userData;
+  const refreshCredits = useCallback(async () => {
+    if (userData?.fid) {
+      try {
+        const response = await fetch(`${BACKEND_ORIGIN}/api/credits?fid=${userData.fid}${walletAddress ? `&wallet=${walletAddress}` : ''}`);
+        const data = await response.json();
+        if (data.success) {
+          setUserData(prev => prev ? {
+            ...prev,
+            credits: data.credits,
+            streak: data.streak,
+          } : null);
+        }
+      } catch (error) {
+        console.error('Failed to refresh credits:', error);
+      }
+    }
+  }, [userData?.fid, walletAddress]);
+
+  const isAuthenticated = !!userData;
 
   return (
     <AuthContext.Provider
@@ -105,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         walletAddress,
         isWalletConnected,
+        refreshCredits,
       }}
     >
       {children}
