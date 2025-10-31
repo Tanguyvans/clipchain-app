@@ -47,4 +47,4 @@ export interface Template {
   useCount: number;
 }
 
-export type NavigationPage = 'feed' | 'discover' | 'create' | 'leaderboard' | 'profile';
+export type NavigationPage = 'feed' | 'create' | 'leaderboard' | 'profile';
