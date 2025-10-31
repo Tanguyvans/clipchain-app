@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Sparkles, User, MessageSquare, Loader2, X } from "lucide-react"
+import { Sparkles, Loader2, X, Plus } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { DEFAULT_TEMPLATES } from "@/lib/default-templates"
 import { sdk } from "@farcaster/miniapp-sdk"
@@ -358,142 +358,52 @@ export default function CreatePage() {
         <div className="flex items-center gap-3">
           <Sparkles className="h-6 w-6 text-orange-500" />
           <div>
-            <h1 className="text-xl font-bold text-white">Create</h1>
-            <p className="text-sm text-gray-400">Generate AI videos</p>
+            <h1 className="text-xl font-bold text-white">Templates</h1>
+            <p className="text-sm text-gray-400">Choose a style to generate</p>
           </div>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
-        {/* Trending Templates Section */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white">🔥 Trending Templates</h2>
-              <p className="text-xs text-gray-400">Popular styles to remix with your data</p>
-            </div>
-          </div>
-
-          {/* Templates Carousel */}
-          <div className="overflow-x-auto pb-4 scrollbar-hide">
-            <div className="flex gap-3">
-              {DEFAULT_TEMPLATES.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => handlePaymentAndGenerate(template.generationType)}
-                  className={`flex-shrink-0 w-36 rounded-xl bg-gradient-to-br ${template.gradient} border ${template.borderColor} p-4 cursor-pointer hover:scale-105 transition-transform text-left`}
-                >
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${template.iconBg} mb-3`}>
-                    <span className="text-2xl">{template.emoji}</span>
-                  </div>
-                  <p className="text-sm text-white font-semibold mb-1 line-clamp-2">{template.name}</p>
-                  <p className="text-[10px] text-gray-400 line-clamp-2">{template.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
+      {/* Template Grid */}
+      <div className="p-4 grid grid-cols-2 gap-4">
+        {DEFAULT_TEMPLATES.map((template) => (
           <button
-            onClick={() => setShowTemplates(true)}
-            className="w-full text-sm text-orange-400 hover:text-orange-300 transition-colors mt-2"
+            key={template.id}
+            onClick={() => handlePaymentAndGenerate(template.generationType)}
+            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-800 hover:border-orange-500/50 transition-all active:scale-95"
           >
-            See All Templates →
+            {/* Video Frame Preview */}
+            <div className={`aspect-[9/16] bg-gradient-to-br ${template.gradient} flex items-center justify-center relative`}>
+              <div className="absolute inset-0 bg-black/20" />
+              <span className="text-6xl z-10">{template.emoji}</span>
+
+              {/* Play Overlay */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full bg-orange-500 flex items-center justify-center">
+                  <div className="w-0 h-0 border-l-[16px] border-l-white border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent ml-1" />
+                </div>
+              </div>
+            </div>
+
+            {/* Template Info */}
+            <div className="p-3 bg-[#0A0A0A]">
+              <h3 className="text-sm font-bold text-white mb-1 line-clamp-1">{template.name}</h3>
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                <span>0 generated</span>
+              </p>
+            </div>
           </button>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-gray-800" />
-
-        {/* Make Your Own Section */}
-        <div>
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-white">✨ Make Your Own</h2>
-            <p className="text-xs text-gray-400">Create from scratch</p>
-          </div>
-
-          <div className="space-y-3">
-            {/* Profile Picture Card */}
-            <button
-              onClick={() => handlePaymentAndGenerate('profile')}
-              className="w-full rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-5 text-left hover:scale-[1.02] transition-all active:scale-95"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/20 flex-shrink-0">
-                  <Sparkles className="h-6 w-6 text-purple-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-white mb-1">💃 Animate Profile</h3>
-                  {userProfile?.avatar && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <img
-                        src={userProfile.avatar}
-                        alt="Your profile"
-                        className="h-8 w-8 rounded-full border border-purple-500/50"
-                      />
-                      <span className="text-xs text-gray-400">Your avatar</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-400">Make your profile picture dance and move!</p>
-                </div>
-                <div className="text-xs text-orange-400 font-medium whitespace-nowrap">
-                  Generate →
-                </div>
-              </div>
-            </button>
-
-            {/* Bio Speech Card */}
-            <button
-              onClick={() => handlePaymentAndGenerate('bio')}
-              className="w-full rounded-xl bg-gradient-to-br from-orange-500/10 to-pink-500/10 border border-orange-500/30 p-5 text-left hover:scale-[1.02] transition-all active:scale-95"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20 flex-shrink-0">
-                  <User className="h-6 w-6 text-orange-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-white mb-1">🎤 Bio Speech</h3>
-                  <p className="text-xs text-gray-300 italic mb-1 line-clamp-1">
-                    {userProfile?.bio ? `"${userProfile.bio}..."` : "Your Farcaster bio"}
-                  </p>
-                  <p className="text-xs text-gray-400">Turn your bio into a professional presentation</p>
-                </div>
-                <div className="text-xs text-orange-400 font-medium whitespace-nowrap">
-                  Generate →
-                </div>
-              </div>
-            </button>
-
-            {/* Custom Prompt Card */}
-            <button
-              onClick={() => handlePaymentAndGenerate('text')}
-              className="w-full rounded-xl bg-gradient-to-br from-green-500/10 to-teal-500/10 border border-green-500/30 p-5 text-left hover:scale-[1.02] transition-all active:scale-95"
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20 flex-shrink-0">
-                  <MessageSquare className="h-6 w-6 text-green-400" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-white mb-1">🎨 Custom Prompt</h3>
-                  <p className="text-xs text-gray-400 mb-1">Describe your video idea...</p>
-                  <p className="text-xs text-gray-400">Full creative control - type anything!</p>
-                </div>
-                <div className="text-xs text-orange-400 font-medium whitespace-nowrap">
-                  Generate →
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Info Card */}
-          <div className="mt-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 p-4">
-            <p className="text-sm text-gray-300 mb-1">💡 How it works</p>
-            <p className="text-xs text-gray-400">
-              Choose your input type, generate your video, and share it to Farcaster.
-              Each generation costs 0.25 USDC or 1 credit.
-            </p>
-          </div>
-        </div>
+        ))}
       </div>
+
+      {/* Floating Create Custom Button */}
+      <button
+        onClick={() => setShowTemplates(true)}
+        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl shadow-orange-500/40 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+      >
+        <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+      </button>
 
       {/* Template Browser Modal - Coming Soon */}
       {showTemplates && (
