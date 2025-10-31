@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch creator info for templates
     const templatesWithCreators = await Promise.all(
-      (templates || []).map(async (template: any) => {
+      (templates || []).map(async (template) => {
         // Check if this is an official template
         const isOfficial = template.is_official === true
         const templateInfo = TEMPLATE_NAMES[template.generation_type]
@@ -113,7 +113,6 @@ export async function GET(request: NextRequest) {
           return {
             ...template,
             creator: null,
-            isOfficial: true,
             name: templateInfo?.name || "Official Template",
             emoji: templateInfo?.emoji || "✨",
             gradient: templateInfo?.gradient || "from-purple-500/10 to-blue-500/10",
@@ -123,8 +122,8 @@ export async function GET(request: NextRequest) {
     )
 
     // Separate official templates from user templates
-    const officialTemplates = templatesWithCreators.filter(t => t.isOfficial)
-    const userTemplates = templatesWithCreators.filter(t => !t.isOfficial)
+    const officialTemplates = templatesWithCreators.filter(t => t.is_official === true)
+    const userTemplates = templatesWithCreators.filter(t => t.is_official !== true)
 
     return NextResponse.json({
       success: true,

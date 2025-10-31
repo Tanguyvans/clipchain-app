@@ -20,6 +20,31 @@ interface UserProfile {
   bio: string
 }
 
+interface TemplateData {
+  id: string
+  creator_fid: number
+  video_url: string | null
+  thumbnail_url: string | null
+  generation_type: 'profile' | 'bio' | 'text'
+  prompt: string
+  settings: Record<string, unknown>
+  cast_hash: string | null
+  cast_url: string | null
+  uses_count: number
+  is_featured: boolean
+  is_official: boolean
+  created_at: string
+  creator?: {
+    fid: number
+    username: string
+    displayName: string
+    pfpUrl: string
+  } | null
+  name?: string
+  emoji?: string
+  gradient?: string
+}
+
 export default function CreatePage() {
   const { walletAddress, userData: authUserData } = useAuth()
   const { isConnected } = useAccount()
@@ -36,9 +61,9 @@ export default function CreatePage() {
   const [generationPrompt, setGenerationPrompt] = useState<string>("")
   const [, setErrorMessage] = useState<string | null>(null)
   const [, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
-  const [templates, setTemplates] = useState<any[]>([])
-  const [officialTemplates, setOfficialTemplates] = useState<any[]>([])
-  const [userTemplates, setUserTemplates] = useState<any[]>([])
+  const [templates, setTemplates] = useState<TemplateData[]>([])
+  const [officialTemplates, setOfficialTemplates] = useState<TemplateData[]>([])
+  const [userTemplates, setUserTemplates] = useState<TemplateData[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(true)
 
   // Fetch user's profile including bio
