@@ -59,6 +59,7 @@ export default function CreatePage() {
   const [isMiniKitReady, setIsMiniKitReady] = useState(false)
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null)
   const [generationPrompt, setGenerationPrompt] = useState<string>("")
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [, setErrorMessage] = useState<string | null>(null)
   const [, setRefundInfo] = useState<{ txHash: string, refunded: boolean } | null>(null)
   const [templates, setTemplates] = useState<TemplateData[]>([])
@@ -187,7 +188,7 @@ export default function CreatePage() {
     return { transactionHash, userWalletAddress }
   }
 
-  const handlePaymentAndGenerate = async (type: "profile" | "bio" | "text") => {
+  const handlePaymentAndGenerate = async (type: "profile" | "bio" | "text", templateId?: string) => {
     if (type === "profile" && !userProfile?.avatar) {
       toast.error("No profile picture found")
       return
@@ -200,6 +201,7 @@ export default function CreatePage() {
     try {
       setIsGenerating(true)
       setSelectedType(type)
+      setSelectedTemplateId(templateId || null)
       setErrorMessage(null)
       setRefundInfo(null)
 
@@ -261,7 +263,29 @@ export default function CreatePage() {
     if (!generatedVideoUrl || !selectedType) return
 
     try {
-      // Save template to database
+      // If user used a template, track the usage
+      if (selectedTemplateId && authUserData?.fid) {
+        try {
+          const trackResponse = await fetch("/api/templates/use", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              templateId: selectedTemplateId,
+              userFid: authUserData.fid,
+              generatedVideoUrl: generatedVideoUrl,
+            }),
+          })
+
+          const trackData = await trackResponse.json()
+          if (trackData.success) {
+            console.log("✅ Template usage tracked")
+          }
+        } catch (trackError) {
+          console.error("Failed to track template usage:", trackError)
+        }
+      }
+
+      // Save as NEW template to database (creates community template)
       if (authUserData?.fid && generationPrompt) {
         try {
           const templateResponse = await fetch("/api/templates/save", {
@@ -417,7 +441,7 @@ export default function CreatePage() {
                 return (
                   <button
                     key={template.id}
-                    onClick={() => handlePaymentAndGenerate(template.generation_type)}
+                    onClick={() => handlePaymentAndGenerate(template.generation_type, template.id)}
                     className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
                   >
                     {/* Video Thumbnail */}
@@ -473,7 +497,7 @@ export default function CreatePage() {
                 return (
                   <button
                     key={template.id}
-                    onClick={() => handlePaymentAndGenerate(template.generation_type)}
+                    onClick={() => handlePaymentAndGenerate(template.generation_type, template.id)}
                     className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
                   >
                     {/* Video Thumbnail */}
