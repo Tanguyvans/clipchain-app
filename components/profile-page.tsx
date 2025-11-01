@@ -20,6 +20,8 @@ interface ProfilePageProps {
   verified?: boolean
   videoCount?: number
   recastCount?: number
+  currentStreak?: number
+  freeGenerations?: number
 }
 
 export function ProfilePage({
@@ -30,13 +32,17 @@ export function ProfilePage({
   verified = false,
   videoCount = 0,
   recastCount = 0,
+  currentStreak = 0,
+  freeGenerations = 0,
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
 
   const stats = [
-    { label: "Videos", value: videoCount.toString(), color: "text-white" },
-    { label: "Recasts", value: recastCount.toString(), color: "text-white" },
+    { label: "Videos", value: videoCount.toString(), color: "text-white", icon: "🎬" },
+    { label: "Recasts", value: recastCount.toString(), color: "text-white", icon: "🔄" },
+    { label: "Streak", value: currentStreak.toString(), color: "text-orange-400", icon: "🔥" },
+    { label: "Free Gens", value: freeGenerations.toString(), color: "text-yellow-400", icon: "⚡" },
   ]
 
   const displayVideos: VideoGridItem[] = videos.length > 0
@@ -114,8 +120,9 @@ export function ProfilePage({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-2 text-center"
+            className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center"
           >
+            <div className="text-xl mb-1">{stat.icon}</div>
             <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
             <p className="text-xs text-gray-400">{stat.label}</p>
           </div>

@@ -28,6 +28,10 @@ export default function Profile() {
   const { walletAddress, userData: authUserData } = useAuth()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [streakData, setStreakData] = useState<{
+    current: number
+    freeGenerations: number
+  }>({ current: 0, freeGenerations: 0 })
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -70,6 +74,29 @@ export default function Profile() {
     fetchUserProfile()
   }, [walletAddress, authUserData])
 
+  // Fetch streak data
+  useEffect(() => {
+    const fetchStreak = async () => {
+      if (!authUserData?.fid) return
+
+      try {
+        const response = await fetch(`/api/user/streak?fid=${authUserData.fid}`)
+        const data = await response.json()
+
+        if (data.success && data.streak) {
+          setStreakData({
+            current: data.streak.current || 0,
+            freeGenerations: data.streak.freeGenerations || 0,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching streak:", error)
+      }
+    }
+
+    fetchStreak()
+  }, [authUserData?.fid])
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0A0A0A]">
@@ -90,6 +117,8 @@ export default function Profile() {
       videoCount={userData?.videoCount || 0}
       recastCount={userData?.recastCount || 0}
       videos={userData?.videos || []}
+      currentStreak={streakData.current}
+      freeGenerations={streakData.freeGenerations}
     />
   )
 }

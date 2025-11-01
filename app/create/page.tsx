@@ -511,41 +511,7 @@ export default function CreatePage() {
         </div>
       </div>
 
-      {/* Interactive Streak Button */}
-      {(streakData.current > 0 || streakData.freeGenerations > 0) && (
-        <div className="p-4">
-          <button
-            onClick={() => setShowStreakModal(true)}
-            className="w-full bg-gradient-to-r from-orange-500/20 to-pink-500/20 hover:from-orange-500/30 hover:to-pink-500/30 border-2 border-orange-500/40 hover:border-orange-500/60 rounded-2xl p-4 transition-all active:scale-98"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 shadow-lg shadow-orange-500/50">
-                  <span className="text-2xl">🔥</span>
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">
-                      {streakData.current} Week Streak
-                    </h3>
-                    {streakData.freeGenerations > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-xs font-semibold text-yellow-400 flex items-center gap-1">
-                        <span>⚡</span> {streakData.freeGenerations} free
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-400">Tap to view details & rewards</p>
-                </div>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {/* Streak Modal */}
+      {/* Streak Modal - Only header badge opens it */}
       <StreakModal
         isOpen={showStreakModal}
         onClose={() => setShowStreakModal(false)}
