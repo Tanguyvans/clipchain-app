@@ -80,10 +80,10 @@ export function ProfilePage({
         </button>
       </div>
 
-      {/* Profile Section */}
-      <div className="px-6 pb-4 text-center">
-        <div className="relative mb-3 inline-block">
-          <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
+      {/* Profile Section - Compact */}
+      <div className="px-6 py-3 text-center">
+        <div className="relative mb-2 inline-block">
+          <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
             <img
               src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
               alt={displayName || username}
@@ -96,8 +96,8 @@ export function ProfilePage({
           </div>
         </div>
 
-        <div className="mb-1 flex items-center justify-center gap-1.5">
-          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-xl font-bold text-transparent">
+        <div className="mb-0.5 flex items-center justify-center gap-1.5">
+          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-lg font-bold text-transparent">
             {displayName || username}
           </h1>
           {verified && <CheckCircle2 className="h-4 w-4 fill-purple-500 text-white" />}
@@ -107,48 +107,48 @@ export function ProfilePage({
         )}
       </div>
 
-      {/* Stats Grid - 2 Column */}
-      <div className="grid grid-cols-2 gap-2 px-6 pb-3">
-        {/* Videos */}
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center">
-          <div className="text-xl mb-1">🎬</div>
-          <p className="text-lg font-bold text-white">{videoCount}</p>
-          <p className="text-xs text-gray-400">Videos</p>
-        </div>
-
-        {/* Recasts */}
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center">
-          <div className="text-xl mb-1">🔄</div>
-          <p className="text-lg font-bold text-white">{recastCount}</p>
-          <p className="text-xs text-gray-400">Recasts</p>
+      {/* Compact Stats - Single Row */}
+      <div className="px-6 pb-2">
+        <div className="flex items-center justify-center gap-6 rounded-lg border border-gray-800 bg-[#1A1A1A] py-2 px-4">
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">🎬</span>
+            <span className="text-sm font-bold text-white">{videoCount}</span>
+            <span className="text-xs text-gray-400">Videos</span>
+          </div>
+          <div className="h-4 w-px bg-gray-700" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">🔄</span>
+            <span className="text-sm font-bold text-white">{recastCount}</span>
+            <span className="text-xs text-gray-400">Recasts</span>
+          </div>
         </div>
       </div>
 
-      {/* Streak - Full Width */}
-      <div className="px-6 pb-4">
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-xl">🔥</span>
+      {/* Streak - Compact */}
+      <div className="px-6 pb-3">
+        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] py-2 px-3">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-base">🔥</span>
             <div className="flex items-center gap-1">
               {currentStreak > 0 ? (
                 <>
                   {Array.from({ length: Math.min(currentStreak, 5) }).map((_, i) => (
-                    <div key={i} className="w-2 h-2 rounded-full bg-orange-400" />
+                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-orange-400" />
                   ))}
                   {currentStreak > 5 && (
-                    <span className="text-sm text-orange-400 ml-1">+{currentStreak - 5}</span>
+                    <span className="text-xs text-orange-400 ml-0.5">+{currentStreak - 5}</span>
                   )}
                 </>
               ) : (
                 <>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="w-2 h-2 rounded-full border border-gray-600" />
+                    <div key={i} className="w-1.5 h-1.5 rounded-full border border-gray-600" />
                   ))}
                 </>
               )}
             </div>
+            <span className="text-xs text-gray-300">{currentStreak} week{currentStreak !== 1 ? 's' : ''}</span>
           </div>
-          <p className="text-sm text-center text-gray-300">{currentStreak} week{currentStreak !== 1 ? 's' : ''} streak</p>
         </div>
       </div>
 
