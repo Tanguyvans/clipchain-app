@@ -7,6 +7,8 @@ import { sdk } from "@farcaster/miniapp-sdk"
 import { toast } from "sonner"
 import { useAccount, useConnect } from "wagmi"
 import { useComposeCast } from "@coinbase/onchainkit/minikit"
+import { StreakIndicator } from "@/components/streak-indicator"
+import { StreakModal } from "@/components/streak-modal"
 
 // Payment constants
 const RECIPIENT_WALLET = "0x2869B9D189a892181E02157f77411E312b9a6Ee6"
@@ -65,6 +67,13 @@ export default function CreatePage() {
   const [officialTemplates, setOfficialTemplates] = useState<TemplateData[]>([])
   const [userTemplates, setUserTemplates] = useState<TemplateData[]>([])
   const [templatesLoading, setTemplatesLoading] = useState(true)
+  const [streakData, setStreakData] = useState<{
+    current: number
+    longest: number
+    freeGenerations: number
+    lastActivity: string | null
+  }>({ current: 0, longest: 0, freeGenerations: 0, lastActivity: null })
+  const [showStreakModal, setShowStreakModal] = useState(false)
 
   // Fetch user's profile including bio
   useEffect(() => {
@@ -123,6 +132,31 @@ export default function CreatePage() {
     fetchTemplates()
   }, [])
 
+  // Fetch user's streak data
+  useEffect(() => {
+    const fetchStreak = async () => {
+      if (!authUserData?.fid) return
+
+      try {
+        const response = await fetch(`/api/user/streak?fid=${authUserData.fid}`)
+        const data = await response.json()
+
+        if (data.success && data.streak) {
+          setStreakData({
+            current: data.streak.current || 0,
+            longest: data.streak.longest || 0,
+            freeGenerations: data.streak.freeGenerations || 0,
+            lastActivity: data.streak.lastActivity || null,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching streak:", error)
+      }
+    }
+
+    fetchStreak()
+  }, [authUserData?.fid])
+
   // Check MiniKit availability and auto-connect wallet
   useEffect(() => {
     const checkMiniKit = async () => {
@@ -143,11 +177,43 @@ export default function CreatePage() {
   }, [isConnected, connectors, connect])
 
   // Process payment and return transaction details
-  const processPayment = async (): Promise<{ transactionHash: string; userWalletAddress: string }> => {
+  const processPayment = async (): Promise<{ transactionHash: string; userWalletAddress: string; usedFreeGen: boolean }> => {
     const isDevelopment = process.env.NODE_ENV === 'development'
     let transactionHash = "dev_tx_" + Date.now()
     let userWalletAddress = ""
+    let usedFreeGen = false
 
+    // Check if user has free generations available
+    if (streakData.freeGenerations > 0 && authUserData?.fid) {
+      try {
+        const response = await fetch('/api/user/use-free-generation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fid: authUserData.fid }),
+        })
+        const data = await response.json()
+
+        if (data.success) {
+          usedFreeGen = true
+          transactionHash = "free_gen_" + Date.now()
+          userWalletAddress = walletAddress || authUserData?.address || ""
+
+          // Update local state
+          setStreakData(prev => ({
+            ...prev,
+            freeGenerations: data.remainingFreeGenerations,
+          }))
+
+          toast.success(`✨ Using free generation! ${data.remainingFreeGenerations} left`)
+          return { transactionHash, userWalletAddress, usedFreeGen }
+        }
+      } catch (error) {
+        console.error("Error using free generation:", error)
+        // Fall through to normal payment
+      }
+    }
+
+    // Normal payment flow
     if (isMiniKitReady && sdk?.actions) {
       if (!isConnected && connectors.length > 0) {
         toast.info("Connecting wallet...")
@@ -184,7 +250,7 @@ export default function CreatePage() {
       toast.info("Development mode - skipping payment")
     }
 
-    return { transactionHash, userWalletAddress }
+    return { transactionHash, userWalletAddress, usedFreeGen }
   }
 
   const handlePaymentAndGenerate = async (type: "profile" | "bio" | "text", templateId?: string) => {
@@ -205,7 +271,7 @@ export default function CreatePage() {
       setRefundInfo(null)
 
       // Process payment
-      const { transactionHash, userWalletAddress } = await processPayment()
+      const { transactionHash, userWalletAddress, usedFreeGen } = await processPayment()
 
       // Get the prompt from the selected template if available
       let promptToUse = "Animate this profile picture with subtle, natural movement" // default fallback
@@ -251,6 +317,37 @@ export default function CreatePage() {
       if (data.videoUrl) {
         setGeneratedVideoUrl(data.videoUrl)
         toast.success("Video generated!")
+
+        // Update streak after successful generation (only if paid, not free gen)
+        if (!usedFreeGen && authUserData?.fid) {
+          try {
+            const streakResponse = await fetch('/api/user/streak', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fid: authUserData.fid }),
+            })
+            const streakData = await streakResponse.json()
+
+            if (streakData.success) {
+              setStreakData({
+                current: streakData.streak.current || 0,
+                longest: streakData.streak.longest || 0,
+                freeGenerations: streakData.streak.freeGenerations || 0,
+                lastActivity: new Date().toISOString(),
+              })
+
+              // Show notification if streak increased or free gen awarded
+              if (streakData.streak.streakIncreased) {
+                toast.success(`🔥 Streak: ${streakData.streak.current} weeks!`, { duration: 3000 })
+              }
+              if (streakData.streak.freeGenAwarded) {
+                toast.success(`✨ Free generation earned!`, { duration: 3000 })
+              }
+            }
+          } catch (error) {
+            console.error("Error updating streak:", error)
+          }
+        }
       }
     } catch (error) {
       console.error("Generation error:", error)
@@ -393,14 +490,70 @@ export default function CreatePage() {
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-20 border-b border-gray-800 bg-[#0A0A0A]/95 p-4 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Sparkles className="h-6 w-6 text-orange-500" />
-          <div>
-            <h1 className="text-xl font-bold text-white">Templates</h1>
-            <p className="text-sm text-gray-400">Choose a style to generate</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-6 w-6 text-orange-500" />
+            <div>
+              <h1 className="text-xl font-bold text-white">Templates</h1>
+              <p className="text-sm text-gray-400">Choose a style to generate</p>
+            </div>
           </div>
+          <button
+            onClick={() => setShowStreakModal(true)}
+            className="transition-transform active:scale-95"
+          >
+            <StreakIndicator
+              currentStreak={streakData.current}
+              freeGenerations={streakData.freeGenerations}
+              compact
+            />
+          </button>
         </div>
       </div>
+
+      {/* Interactive Streak Button */}
+      {(streakData.current > 0 || streakData.freeGenerations > 0) && (
+        <div className="p-4">
+          <button
+            onClick={() => setShowStreakModal(true)}
+            className="w-full bg-gradient-to-r from-orange-500/20 to-pink-500/20 hover:from-orange-500/30 hover:to-pink-500/30 border-2 border-orange-500/40 hover:border-orange-500/60 rounded-2xl p-4 transition-all active:scale-98"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 shadow-lg shadow-orange-500/50">
+                  <span className="text-2xl">🔥</span>
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">
+                      {streakData.current} Week Streak
+                    </h3>
+                    {streakData.freeGenerations > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-yellow-500/20 text-xs font-semibold text-yellow-400 flex items-center gap-1">
+                        <span>⚡</span> {streakData.freeGenerations} free
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-400">Tap to view details & rewards</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Streak Modal */}
+      <StreakModal
+        isOpen={showStreakModal}
+        onClose={() => setShowStreakModal(false)}
+        currentStreak={streakData.current}
+        longestStreak={streakData.longest}
+        freeGenerations={streakData.freeGenerations}
+        lastActivityDate={streakData.lastActivity}
+      />
 
       {/* Templates Section */}
       <div className="pb-32">
