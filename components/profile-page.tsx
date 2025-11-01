@@ -35,8 +35,8 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
   currentStreak = 0,
-  userFid,
-  onStreakUpdate,
+  userFid: _userFid,
+  onStreakUpdate: _onStreakUpdate,
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
