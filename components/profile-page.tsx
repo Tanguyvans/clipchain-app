@@ -22,6 +22,8 @@ interface ProfilePageProps {
   recastCount?: number
   currentStreak?: number
   freeGenerations?: number
+  userFid?: number
+  onStreakUpdate?: (newStreak: number, freeGens: number) => void
 }
 
 export function ProfilePage({
@@ -33,9 +35,39 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
   currentStreak = 0,
+  userFid,
+  onStreakUpdate,
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
+  const [isUpdatingStreak, setIsUpdatingStreak] = useState(false)
+  const [showContinueButton, setShowContinueButton] = useState(true)
+
+  const handleContinueStreak = async () => {
+    if (!userFid || isUpdatingStreak) return
+
+    setIsUpdatingStreak(true)
+    try {
+      const response = await fetch('/api/user/streak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fid: userFid }),
+      })
+
+      const data = await response.json()
+      if (data.success && data.streak) {
+        // Only update if streak actually increased
+        if (data.streak.streakIncreased) {
+          setShowContinueButton(false)
+          onStreakUpdate?.(data.streak.current, data.streak.freeGenerations)
+        }
+      }
+    } catch (error) {
+      console.error('Error updating streak:', error)
+    } finally {
+      setIsUpdatingStreak(false)
+    }
+  }
 
   const displayVideos: VideoGridItem[] = videos.length > 0
     ? videos.map(v => ({
@@ -134,13 +166,16 @@ export function ProfilePage({
               <div className="text-xs text-gray-400">week streak</div>
             </div>
           </div>
-          <button
-            onClick={() => router.push('/create')}
-            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 hover:shadow-orange-500/50"
-          >
-            <span>Continue</span>
-            <span className="text-base">🔥</span>
-          </button>
+          {showContinueButton && (
+            <button
+              onClick={handleContinueStreak}
+              disabled={isUpdatingStreak}
+              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 hover:shadow-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>{isUpdatingStreak ? 'Updating...' : 'Continue'}</span>
+              <span className="text-base">🔥</span>
+            </button>
+          )}
         </div>
       </div>
 

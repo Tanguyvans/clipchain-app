@@ -108,6 +108,13 @@ export default function Profile() {
     )
   }
 
+  const handleStreakUpdate = (newStreak: number, freeGens: number) => {
+    setStreakData({
+      current: newStreak,
+      freeGenerations: freeGens,
+    })
+  }
+
   return (
     <ProfilePage
       username={userData?.username || "tanguyvans"}
@@ -119,6 +126,8 @@ export default function Profile() {
       videos={userData?.videos || []}
       currentStreak={streakData.current}
       freeGenerations={streakData.freeGenerations}
+      userFid={authUserData?.fid}
+      onStreakUpdate={handleStreakUpdate}
     />
   )
 }
