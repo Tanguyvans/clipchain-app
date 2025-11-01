@@ -163,7 +163,7 @@ export function ProfilePage({
             <span className="text-2xl">🔥</span>
             <div>
               <div className="text-lg font-bold text-white">{currentStreak}</div>
-              <div className="text-xs text-gray-400">week streak</div>
+              <div className="text-xs text-gray-400">streak</div>
             </div>
           </div>
           {showContinueButton && (
