@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get user's streak data
+    // Use current_streak as generation counter
     const { data: user, error } = await supabase
       .from("users")
-      .select("current_streak, longest_streak, free_generations, last_activity_date")
+      .select("current_streak, free_generations")
       .eq("fid", parseInt(fid))
       .single()
 
@@ -28,26 +28,18 @@ export async function GET(request: NextRequest) {
       // User doesn't exist yet, return defaults
       return NextResponse.json({
         success: true,
-        streak: {
-          current: 0,
-          longest: 0,
-          freeGenerations: 1, // New users get 1 free
-          lastActivity: null,
-        },
+        count: 0,
+        freeGenerations: 1,
       })
     }
 
     return NextResponse.json({
       success: true,
-      streak: {
-        current: user.current_streak || 0,
-        longest: user.longest_streak || 0,
-        freeGenerations: user.free_generations || 0,
-        lastActivity: user.last_activity_date,
-      },
+      count: user.current_streak || 0,
+      freeGenerations: user.free_generations || 0,
     })
   } catch (error) {
-    console.error("Error fetching streak:", error)
+    console.error("Error fetching generation count:", error)
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -55,7 +47,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Update streak when user generates a video
+// Increment generation counter (called after each video generation)
 export async function POST(request: NextRequest) {
   try {
     const { fid } = await request.json()
@@ -67,49 +59,58 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Ensure user exists first
-    const { data: existingUser } = await supabase
+    // Get current count (using current_streak field)
+    const { data: user } = await supabase
       .from("users")
-      .select("fid")
+      .select("current_streak, free_generations")
       .eq("fid", fid)
       .single()
 
-    if (!existingUser) {
-      // Create user with 1 free generation
+    if (!user) {
+      // Create user
       await supabase.from("users").insert({
         fid: fid,
         credit_balance: 3,
+        current_streak: 1,
         free_generations: 1,
+      })
+
+      return NextResponse.json({
+        success: true,
+        count: 1,
+        freeGenerations: 1,
+        freeGenAwarded: false,
       })
     }
 
-    // Call the database function to update streak
-    const { data, error } = await supabase.rpc("update_user_streak", {
-      p_user_fid: fid,
-    })
+    // Increment counter
+    const newCount = (user.current_streak || 0) + 1
+    let freeGens = user.free_generations || 0
+    let awarded = false
 
-    if (error) {
-      console.error("Error updating streak:", error)
-      return NextResponse.json(
-        { success: false, error: "Failed to update streak" },
-        { status: 500 }
-      )
+    // Award free gen every 7 videos
+    if (newCount % 7 === 0) {
+      freeGens += 1
+      awarded = true
     }
 
-    const result = data?.[0]
+    // Update user (use current_streak as counter)
+    await supabase
+      .from("users")
+      .update({
+        current_streak: newCount,
+        free_generations: freeGens,
+      })
+      .eq("fid", fid)
 
     return NextResponse.json({
       success: true,
-      streak: {
-        current: result?.current_streak || 0,
-        longest: result?.longest_streak || 0,
-        freeGenerations: result?.free_generations || 0,
-        streakIncreased: result?.streak_increased || false,
-        freeGenAwarded: result?.free_gen_awarded || false,
-      },
+      count: newCount,
+      freeGenerations: freeGens,
+      freeGenAwarded: awarded,
     })
   } catch (error) {
-    console.error("Error in /api/user/streak POST:", error)
+    console.error("Error incrementing generation count:", error)
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

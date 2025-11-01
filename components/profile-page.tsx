@@ -40,34 +40,10 @@ export function ProfilePage({
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
-  const [isUpdatingStreak, setIsUpdatingStreak] = useState(false)
-  const [showContinueButton, setShowContinueButton] = useState(true)
 
-  const handleContinueStreak = async () => {
-    if (!userFid || isUpdatingStreak) return
-
-    setIsUpdatingStreak(true)
-    try {
-      const response = await fetch('/api/user/streak', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fid: userFid }),
-      })
-
-      const data = await response.json()
-      if (data.success && data.streak) {
-        // Only update if streak actually increased
-        if (data.streak.streakIncreased) {
-          setShowContinueButton(false)
-          onStreakUpdate?.(data.streak.current, data.streak.freeGenerations)
-        }
-      }
-    } catch (error) {
-      console.error('Error updating streak:', error)
-    } finally {
-      setIsUpdatingStreak(false)
-    }
-  }
+  // Calculate progress to next free generation (every 7 videos)
+  const progressToNext = currentStreak % 7
+  const remaining = 7 - progressToNext
 
   const displayVideos: VideoGridItem[] = videos.length > 0
     ? videos.map(v => ({
@@ -156,26 +132,23 @@ export function ProfilePage({
         </div>
       </div>
 
-      {/* Streak - Simple counter with flame button */}
+      {/* Generation Counter */}
       <div className="px-6 pb-3">
-        <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-[#1A1A1A] py-2.5 px-4">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🔥</span>
-            <div>
-              <div className="text-lg font-bold text-white">{currentStreak}</div>
-              <div className="text-xs text-gray-400">streak</div>
+        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] py-3 px-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🎬</span>
+              <span className="text-sm font-semibold text-white">{currentStreak} videos generated</span>
             </div>
+            <div className="text-xs text-gray-400">{remaining} more for free gen</div>
           </div>
-          {showContinueButton && (
-            <button
-              onClick={handleContinueStreak}
-              disabled={isUpdatingStreak}
-              className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 hover:shadow-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span>{isUpdatingStreak ? 'Updating...' : 'Continue'}</span>
-              <span className="text-base">🔥</span>
-            </button>
-          )}
+          {/* Progress bar */}
+          <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300"
+              style={{ width: `${(progressToNext / 7) * 100}%` }}
+            />
+          </div>
         </div>
       </div>
 

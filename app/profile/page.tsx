@@ -28,10 +28,10 @@ export default function Profile() {
   const { walletAddress, userData: authUserData } = useAuth()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [streakData, setStreakData] = useState<{
-    current: number
+  const [generationData, setGenerationData] = useState<{
+    count: number
     freeGenerations: number
-  }>({ current: 0, freeGenerations: 0 })
+  }>({ count: 0, freeGenerations: 0 })
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -74,27 +74,27 @@ export default function Profile() {
     fetchUserProfile()
   }, [walletAddress, authUserData])
 
-  // Fetch streak data
+  // Fetch generation count data
   useEffect(() => {
-    const fetchStreak = async () => {
+    const fetchGenerationData = async () => {
       if (!authUserData?.fid) return
 
       try {
         const response = await fetch(`/api/user/streak?fid=${authUserData.fid}`)
         const data = await response.json()
 
-        if (data.success && data.streak) {
-          setStreakData({
-            current: data.streak.current || 0,
-            freeGenerations: data.streak.freeGenerations || 0,
+        if (data.success) {
+          setGenerationData({
+            count: data.count || 0,
+            freeGenerations: data.freeGenerations || 0,
           })
         }
       } catch (error) {
-        console.error("Error fetching streak:", error)
+        console.error("Error fetching generation data:", error)
       }
     }
 
-    fetchStreak()
+    fetchGenerationData()
   }, [authUserData?.fid])
 
   if (isLoading) {
@@ -108,9 +108,9 @@ export default function Profile() {
     )
   }
 
-  const handleStreakUpdate = (newStreak: number, freeGens: number) => {
-    setStreakData({
-      current: newStreak,
+  const handleCountUpdate = (newCount: number, freeGens: number) => {
+    setGenerationData({
+      count: newCount,
       freeGenerations: freeGens,
     })
   }
@@ -124,10 +124,10 @@ export default function Profile() {
       videoCount={userData?.videoCount || 0}
       recastCount={userData?.recastCount || 0}
       videos={userData?.videos || []}
-      currentStreak={streakData.current}
-      freeGenerations={streakData.freeGenerations}
+      currentStreak={generationData.count}
+      freeGenerations={generationData.freeGenerations}
       userFid={authUserData?.fid}
-      onStreakUpdate={handleStreakUpdate}
+      onStreakUpdate={handleCountUpdate}
     />
   )
 }
