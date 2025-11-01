@@ -33,17 +33,9 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
   currentStreak = 0,
-  freeGenerations = 0,
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
-
-  const stats = [
-    { label: "Videos", value: videoCount.toString(), color: "text-white", icon: "🎬" },
-    { label: "Recasts", value: recastCount.toString(), color: "text-white", icon: "🔄" },
-    { label: "Streak", value: currentStreak.toString(), color: "text-orange-400", icon: "🔥" },
-    { label: "Free Gens", value: freeGenerations.toString(), color: "text-yellow-400", icon: "⚡" },
-  ]
 
   const displayVideos: VideoGridItem[] = videos.length > 0
     ? videos.map(v => ({
@@ -115,18 +107,49 @@ export function ProfilePage({
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 px-6 pb-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center"
-          >
-            <div className="text-xl mb-1">{stat.icon}</div>
-            <p className={`text-lg font-bold ${stat.color}`}>{stat.value}</p>
-            <p className="text-xs text-gray-400">{stat.label}</p>
+      {/* Stats Grid - 2 Column */}
+      <div className="grid grid-cols-2 gap-2 px-6 pb-3">
+        {/* Videos */}
+        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center">
+          <div className="text-xl mb-1">🎬</div>
+          <p className="text-lg font-bold text-white">{videoCount}</p>
+          <p className="text-xs text-gray-400">Videos</p>
+        </div>
+
+        {/* Recasts */}
+        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-3 text-center">
+          <div className="text-xl mb-1">🔄</div>
+          <p className="text-lg font-bold text-white">{recastCount}</p>
+          <p className="text-xs text-gray-400">Recasts</p>
+        </div>
+      </div>
+
+      {/* Streak - Full Width */}
+      <div className="px-6 pb-4">
+        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] p-4">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-xl">🔥</span>
+            <div className="flex items-center gap-1">
+              {currentStreak > 0 ? (
+                <>
+                  {Array.from({ length: Math.min(currentStreak, 5) }).map((_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full bg-orange-400" />
+                  ))}
+                  {currentStreak > 5 && (
+                    <span className="text-sm text-orange-400 ml-1">+{currentStreak - 5}</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full border border-gray-600" />
+                  ))}
+                </>
+              )}
+            </div>
           </div>
-        ))}
+          <p className="text-sm text-center text-gray-300">{currentStreak} week{currentStreak !== 1 ? 's' : ''} streak</p>
+        </div>
       </div>
 
       {/* Tabs */}
