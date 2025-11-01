@@ -124,31 +124,23 @@ export function ProfilePage({
         </div>
       </div>
 
-      {/* Streak - Compact */}
+      {/* Streak - Simple counter with flame button */}
       <div className="px-6 pb-3">
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] py-2 px-3">
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-base">🔥</span>
-            <div className="flex items-center gap-1">
-              {currentStreak > 0 ? (
-                <>
-                  {Array.from({ length: Math.min(currentStreak, 5) }).map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-orange-400" />
-                  ))}
-                  {currentStreak > 5 && (
-                    <span className="text-xs text-orange-400 ml-0.5">+{currentStreak - 5}</span>
-                  )}
-                </>
-              ) : (
-                <>
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full border border-gray-600" />
-                  ))}
-                </>
-              )}
+        <div className="flex items-center justify-between rounded-lg border border-gray-800 bg-[#1A1A1A] py-2.5 px-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🔥</span>
+            <div>
+              <div className="text-lg font-bold text-white">{currentStreak}</div>
+              <div className="text-xs text-gray-400">week streak</div>
             </div>
-            <span className="text-xs text-gray-300">{currentStreak} week{currentStreak !== 1 ? 's' : ''}</span>
           </div>
+          <button
+            onClick={() => router.push('/create')}
+            className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-orange-500/30 transition-all active:scale-95 hover:shadow-orange-500/50"
+          >
+            <span>Continue</span>
+            <span className="text-base">🔥</span>
+          </button>
         </div>
       </div>
 

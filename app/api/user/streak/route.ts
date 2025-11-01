@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // Get user's streak data
     const { data: user, error } = await supabase
       .from("users")
-      .select("current_streak, longest_streak, free_generations, last_activity_date, streak_updated_at")
+      .select("current_streak, longest_streak, free_generations, last_activity_date")
       .eq("fid", parseInt(fid))
       .single()
 
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       success: true,
       streak: {
         current: result?.current_streak || 0,
+        longest: result?.longest_streak || 0,
         freeGenerations: result?.free_generations || 0,
         streakIncreased: result?.streak_increased || false,
         freeGenAwarded: result?.free_gen_awarded || false,
