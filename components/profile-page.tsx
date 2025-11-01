@@ -1,7 +1,7 @@
 "use client"
 
-import { ChevronLeft, MoreVertical, CheckCircle2, Play } from "lucide-react"
-import { useState } from "react"
+import { ChevronLeft, MoreVertical, CheckCircle2, Play, Gift } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 interface VideoGridItem {
@@ -35,15 +35,63 @@ export function ProfilePage({
   videoCount = 0,
   recastCount = 0,
   currentStreak = 0,
-  userFid: _userFid,
+  userFid,
   onStreakUpdate: _onStreakUpdate,
 }: ProfilePageProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"videos" | "liked" | "remixes">("videos")
+  const [dailyRewardAvailable, setDailyRewardAvailable] = useState(false)
+  const [claiming, setClaiming] = useState(false)
+  const [showRewardNotif, setShowRewardNotif] = useState(false)
 
   // Calculate progress to next free generation (every 7 videos)
   const progressToNext = currentStreak % 7
   const remaining = 7 - progressToNext
+
+  // Check if daily reward is available
+  useEffect(() => {
+    const checkDailyReward = async () => {
+      if (!userFid) return
+
+      try {
+        const response = await fetch(`/api/user/daily?fid=${userFid}`)
+        const data = await response.json()
+
+        if (data.success) {
+          setDailyRewardAvailable(data.available)
+        }
+      } catch (error) {
+        console.error("Error checking daily reward:", error)
+      }
+    }
+
+    checkDailyReward()
+  }, [userFid])
+
+  const claimDailyReward = async () => {
+    if (!userFid || claiming) return
+
+    setClaiming(true)
+    try {
+      const response = await fetch("/api/user/daily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fid: userFid }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && !data.alreadyClaimed) {
+        setDailyRewardAvailable(false)
+        setShowRewardNotif(true)
+        setTimeout(() => setShowRewardNotif(false), 3000)
+      }
+    } catch (error) {
+      console.error("Error claiming daily reward:", error)
+    } finally {
+      setClaiming(false)
+    }
+  }
 
   const displayVideos: VideoGridItem[] = videos.length > 0
     ? videos.map(v => ({
@@ -131,6 +179,33 @@ export function ProfilePage({
           </div>
         </div>
       </div>
+
+      {/* Daily Reward */}
+      {dailyRewardAvailable && (
+        <div className="px-6 pb-2">
+          <button
+            onClick={claimDailyReward}
+            disabled={claiming}
+            className="w-full rounded-lg border border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20 py-3 px-4 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Gift className="h-5 w-5 text-green-400" />
+              <span className="text-sm font-semibold text-white">
+                {claiming ? "Claiming..." : "Claim Daily Reward (+1 Credit)"}
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {/* Reward Notification */}
+      {showRewardNotif && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+            🎉 Daily Bonus Claimed! +1 Credit
+          </div>
+        </div>
+      )}
 
       {/* Generation Counter */}
       <div className="px-6 pb-3">

@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Use current_streak as generation counter
+    // Get actual video count from total_videos_created
     const { data: user, error } = await supabase
       .from("users")
-      .select("current_streak, free_generations")
+      .select("total_videos_created, free_generations")
       .eq("fid", parseInt(fid))
       .single()
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      count: user.current_streak || 0,
+      count: user.total_videos_created || 0,
       freeGenerations: user.free_generations || 0,
     })
   } catch (error) {
@@ -59,10 +59,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current count (using current_streak field)
+    // Get current count (using total_videos_created)
     const { data: user } = await supabase
       .from("users")
-      .select("current_streak, free_generations")
+      .select("total_videos_created, free_generations")
       .eq("fid", fid)
       .single()
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       await supabase.from("users").insert({
         fid: fid,
         credit_balance: 3,
-        current_streak: 1,
+        total_videos_created: 1,
         free_generations: 1,
       })
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Increment counter
-    const newCount = (user.current_streak || 0) + 1
+    const newCount = (user.total_videos_created || 0) + 1
     let freeGens = user.free_generations || 0
     let awarded = false
 
@@ -94,11 +94,11 @@ export async function POST(request: NextRequest) {
       awarded = true
     }
 
-    // Update user (use current_streak as counter)
+    // Update user
     await supabase
       .from("users")
       .update({
-        current_streak: newCount,
+        total_videos_created: newCount,
         free_generations: freeGens,
       })
       .eq("fid", fid)
