@@ -5,6 +5,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Get current login streak status
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -17,10 +18,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get actual video count from total_videos_created
     const { data: user, error } = await supabase
       .from("users")
-      .select("total_videos_created, free_generations")
+      .select("login_streak, longest_login_streak, last_login_date, free_generations")
       .eq("fid", parseInt(fid))
       .single()
 
@@ -28,18 +28,27 @@ export async function GET(request: NextRequest) {
       // User doesn't exist yet, return defaults
       return NextResponse.json({
         success: true,
-        count: 0,
+        loginStreak: 0,
+        longestLoginStreak: 0,
+        lastLoginDate: null,
         freeGenerations: 1,
+        canCheckIn: true,
       })
     }
 
+    const today = new Date().toISOString().split('T')[0]
+    const lastLogin = user.last_login_date
+
     return NextResponse.json({
       success: true,
-      count: user.total_videos_created || 0,
+      loginStreak: user.login_streak || 0,
+      longestLoginStreak: user.longest_login_streak || 0,
+      lastLoginDate: lastLogin,
       freeGenerations: user.free_generations || 0,
+      canCheckIn: lastLogin !== today, // Can check in if not already done today
     })
   } catch (error) {
-    console.error("Error fetching generation count:", error)
+    console.error("Error fetching login streak:", error)
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }
@@ -47,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Increment generation counter (called after each video generation)
+// Check in for the day (update login streak)
 export async function POST(request: NextRequest) {
   try {
     const { fid } = await request.json()
@@ -59,58 +68,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get current count (using total_videos_created)
-    const { data: user } = await supabase
-      .from("users")
-      .select("total_videos_created, free_generations")
-      .eq("fid", fid)
-      .single()
+    // Call the database function to update streak
+    const { data, error } = await supabase.rpc("update_daily_login_streak", {
+      p_user_fid: fid,
+    })
 
-    if (!user) {
-      // Create user
-      await supabase.from("users").insert({
-        fid: fid,
-        credit_balance: 3,
-        total_videos_created: 1,
-        free_generations: 1,
-      })
-
-      return NextResponse.json({
-        success: true,
-        count: 1,
-        freeGenerations: 1,
-        freeGenAwarded: false,
-      })
+    if (error) {
+      console.error("Error updating login streak:", error)
+      return NextResponse.json(
+        { success: false, error: "Failed to update login streak" },
+        { status: 500 }
+      )
     }
 
-    // Increment counter
-    const newCount = (user.total_videos_created || 0) + 1
-    let freeGens = user.free_generations || 0
-    let awarded = false
-
-    // Award free gen every 10 videos (max 3 stored)
-    if (newCount % 10 === 0 && freeGens < 3) {
-      freeGens += 1
-      awarded = true
-    }
-
-    // Update user
-    await supabase
-      .from("users")
-      .update({
-        total_videos_created: newCount,
-        free_generations: freeGens,
-      })
-      .eq("fid", fid)
+    const result = Array.isArray(data) ? data[0] : data
 
     return NextResponse.json({
       success: true,
-      count: newCount,
-      freeGenerations: freeGens,
-      freeGenAwarded: awarded,
+      loginStreak: result.login_streak || 0,
+      longestLoginStreak: result.longest_login_streak || 0,
+      freeGenerations: result.free_generations || 0,
+      streakIncreased: result.streak_increased || false,
+      freeGenAwarded: result.free_gen_awarded || false,
     })
   } catch (error) {
-    console.error("Error incrementing generation count:", error)
+    console.error("Error checking in:", error)
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 }

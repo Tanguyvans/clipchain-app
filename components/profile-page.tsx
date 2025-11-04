@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, MoreVertical, CheckCircle2, Play, Gift } from "lucide-react"
+import { ChevronLeft, MoreVertical, CheckCircle2, Play, Gift, Flame, Zap, TrendingUp } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
@@ -44,9 +44,41 @@ export function ProfilePage({
   const [claiming, setClaiming] = useState(false)
   const [showRewardNotif, setShowRewardNotif] = useState(false)
 
-  // Calculate progress to next free generation (every 7 videos)
-  const progressToNext = currentStreak % 7
-  const remaining = 7 - progressToNext
+  // Login streak state
+  const [loginStreak, setLoginStreak] = useState(0)
+  const [canCheckIn, setCanCheckIn] = useState(true)
+  const [checkingIn, setCheckingIn] = useState(false)
+  const [showStreakNotif, setShowStreakNotif] = useState(false)
+  const [streakRewardEarned, setStreakRewardEarned] = useState(false)
+
+  // Calculate progress to next free generation (every 10 videos)
+  const progressToNext = currentStreak % 10
+  const remaining = 10 - progressToNext
+
+  // Calculate login streak progress (every 7 days)
+  const loginProgressToNext = loginStreak % 7
+  const loginRemaining = 7 - loginProgressToNext
+
+  // Fetch login streak status
+  useEffect(() => {
+    const fetchLoginStreak = async () => {
+      if (!userFid) return
+
+      try {
+        const response = await fetch(`/api/user/login-streak?fid=${userFid}`)
+        const data = await response.json()
+
+        if (data.success) {
+          setLoginStreak(data.loginStreak || 0)
+          setCanCheckIn(data.canCheckIn)
+        }
+      } catch (error) {
+        console.error("Error fetching login streak:", error)
+      }
+    }
+
+    fetchLoginStreak()
+  }, [userFid])
 
   // Check if daily reward is available
   useEffect(() => {
@@ -90,6 +122,33 @@ export function ProfilePage({
       console.error("Error claiming daily reward:", error)
     } finally {
       setClaiming(false)
+    }
+  }
+
+  const handleCheckIn = async () => {
+    if (!userFid || checkingIn || !canCheckIn) return
+
+    setCheckingIn(true)
+    try {
+      const response = await fetch("/api/user/login-streak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fid: userFid }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setLoginStreak(data.loginStreak || 0)
+        setCanCheckIn(false)
+        setStreakRewardEarned(data.freeGenAwarded || false)
+        setShowStreakNotif(true)
+        setTimeout(() => setShowStreakNotif(false), 3000)
+      }
+    } catch (error) {
+      console.error("Error checking in:", error)
+    } finally {
+      setCheckingIn(false)
     }
   }
 
@@ -207,21 +266,94 @@ export function ProfilePage({
         </div>
       )}
 
-      {/* Generation Counter */}
+      {/* Streak Notification */}
+      {showStreakNotif && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
+          <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-full shadow-lg font-semibold">
+            {streakRewardEarned ? "🔥 Streak milestone! +1 Free Video!" : `🔥 Day ${loginStreak} Streak!`}
+          </div>
+        </div>
+      )}
+
+      {/* Login Streak Section */}
       <div className="px-6 pb-3">
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] py-3 px-4">
+        <div className="rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-pink-500/10 p-4">
+          {/* Header with Flame Icon */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-pink-500">
+                <Flame className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Login Streak</h3>
+                <p className="text-xs text-gray-400">Daily login rewards</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-orange-400">{loginStreak}</div>
+              <div className="text-xs text-gray-400">days</div>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+              <span>Progress to reward</span>
+              <span>{loginRemaining} more {loginRemaining === 1 ? 'day' : 'days'}</span>
+            </div>
+            <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-500"
+                style={{ width: `${(loginProgressToNext / 7) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Check-in Button */}
+          <button
+            onClick={handleCheckIn}
+            disabled={!canCheckIn || checkingIn}
+            className={`w-full py-2.5 rounded-lg font-semibold text-sm transition-all ${
+              canCheckIn && !checkingIn
+                ? "bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-500/30 hover:scale-[1.02] active:scale-95"
+                : "bg-gray-800 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            {checkingIn ? (
+              <span className="flex items-center justify-center gap-2">
+                <TrendingUp className="h-4 w-4 animate-pulse" />
+                Checking in...
+              </span>
+            ) : canCheckIn ? (
+              <span className="flex items-center justify-center gap-2">
+                <Flame className="h-4 w-4" />
+                Continue Streak
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Checked in today!
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Video Generation Milestone */}
+      <div className="px-6 pb-3">
+        <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-blue-500/10 p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🎬</span>
-              <span className="text-sm font-semibold text-white">{currentStreak} videos generated</span>
+              <Zap className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+              <span className="text-sm font-semibold text-white">{currentStreak} videos created</span>
             </div>
-            <div className="text-xs text-gray-400">{remaining} more for free gen</div>
+            <div className="text-xs text-gray-400">{remaining} more for free video</div>
           </div>
           {/* Progress bar */}
-          <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300"
-              style={{ width: `${(progressToNext / 7) * 100}%` }}
+              className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
+              style={{ width: `${(progressToNext / 10) * 100}%` }}
             />
           </div>
         </div>
