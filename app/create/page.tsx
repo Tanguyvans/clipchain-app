@@ -539,7 +539,6 @@ export default function CreatePage() {
               {officialTemplates.map((template) => {
                 const videoUrl = template.video_url
                 const emoji = template.emoji
-                const baseGradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
                 const previewGradient = template.settings?.previewGradient || 'from-purple-600 via-violet-600 to-blue-600'
 
                 return (
