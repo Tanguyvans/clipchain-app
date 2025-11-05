@@ -74,6 +74,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             })
             .catch(err => console.error('Failed to fetch credits:', err));
+
+          // Track login for streak (silently in background)
+          fetch(`${BACKEND_ORIGIN}/api/user/login-streak`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fid: context.user.fid }),
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.freeVideoAwarded) {
+                console.log(`🔥 ${data.loginStreak}-day login streak! Free video unlocked!`);
+              }
+            })
+            .catch(err => console.error('Failed to track login:', err));
         }
       } catch (error) {
         console.error('Failed to load user context:', error);
