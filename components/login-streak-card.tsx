@@ -15,7 +15,6 @@ export function LoginStreakCard({ userFid, onRewardClaimed }: LoginStreakCardPro
   const [freeVideosEarned, setFreeVideosEarned] = useState(0)
   const [showRewardAnimation, setShowRewardAnimation] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [buttonDismissed, setButtonDismissed] = useState(false)
 
   // Fetch login streak data
   useEffect(() => {
@@ -151,23 +150,7 @@ export function LoginStreakCard({ userFid, onRewardClaimed }: LoginStreakCardPro
           </div>
         </div>
 
-        {/* Continue Streak Button - Shows once and disappears after click */}
-        {!buttonDismissed && daysUntilReward < 7 && daysUntilReward > 0 && (
-          <div className="px-3 pb-2">
-            <button
-              onClick={() => {
-                setButtonDismissed(true)
-              }}
-              className="w-full rounded-lg bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 py-1.5 px-3 text-xs font-semibold text-orange-300 transition-all hover:bg-orange-500/30 active:scale-95"
-            >
-              <span className="flex items-center justify-center gap-1.5">
-                <Flame className="h-3.5 w-3.5" />
-                Continue tomorrow!
-              </span>
-            </button>
-          </div>
-        )}
-
+        {/* Show reward ready indicator */}
         {daysUntilReward === 0 && (
           <div className="px-3 pb-2">
             <div className="rounded-lg bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 py-1.5 px-3 text-center">

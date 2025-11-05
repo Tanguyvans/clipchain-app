@@ -12,6 +12,9 @@ export interface Template {
   borderColor: string
   iconBg: string
   iconColor: string
+  previewImage?: string // URL to preview/thumbnail image
+  previewGradient?: string // Enhanced gradient for preview cards
+  accentColor?: string // Accent color for the template
   settings?: Record<string, unknown>
 }
 
@@ -24,6 +27,8 @@ export const DEFAULT_TEMPLATES: Template[] = [
     generationType: 'profile',
     prompt: 'Create a dynamic multi-shot dance animation with cinematic camera transitions and energetic movements',
     gradient: 'from-purple-500/10 to-blue-500/10',
+    previewGradient: 'from-purple-600 via-violet-600 to-blue-600',
+    accentColor: 'purple',
     borderColor: 'border-purple-500/30',
     iconBg: 'bg-purple-500/20',
     iconColor: 'text-purple-400',
@@ -40,6 +45,8 @@ export const DEFAULT_TEMPLATES: Template[] = [
     generationType: 'bio',
     prompt: 'Create a dynamic multi-shot professional presentation about this bio with cinematic camera transitions',
     gradient: 'from-orange-500/10 to-pink-500/10',
+    previewGradient: 'from-orange-600 via-pink-600 to-rose-600',
+    accentColor: 'orange',
     borderColor: 'border-orange-500/30',
     iconBg: 'bg-orange-500/20',
     iconColor: 'text-orange-400',
@@ -56,6 +63,8 @@ export const DEFAULT_TEMPLATES: Template[] = [
     generationType: 'text',
     prompt: '', // User provides their own prompt
     gradient: 'from-green-500/10 to-teal-500/10',
+    previewGradient: 'from-emerald-600 via-teal-600 to-cyan-600',
+    accentColor: 'emerald',
     borderColor: 'border-green-500/30',
     iconBg: 'bg-green-500/20',
     iconColor: 'text-green-400',
