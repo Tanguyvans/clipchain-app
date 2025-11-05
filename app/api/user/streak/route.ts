@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // Get actual video count from total_videos_created
     const { data: user, error } = await supabase
       .from("users")
-      .select("total_videos_created, free_generations")
+      .select("total_videos_created, free_generations, free_videos_from_generation")
       .eq("fid", parseInt(fid))
       .single()
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Get current count (using total_videos_created)
     const { data: user } = await supabase
       .from("users")
-      .select("total_videos_created, free_generations")
+      .select("total_videos_created, free_generations, free_videos_from_generation")
       .eq("fid", fid)
       .single()
 
@@ -88,10 +88,28 @@ export async function POST(request: NextRequest) {
     let freeGens = user.free_generations || 0
     let awarded = false
 
-    // Award free gen every 7 videos
-    if (newCount % 7 === 0) {
+    // Award free gen every 10 videos
+    if (newCount % 10 === 0) {
       freeGens += 1
       awarded = true
+
+      // Also update free_videos_from_generation counter
+      const currentFreeFromGen = user.free_videos_from_generation || 0
+      await supabase
+        .from("users")
+        .update({
+          free_videos_from_generation: currentFreeFromGen + 1,
+        })
+        .eq("fid", fid)
+
+      // Log milestone reward
+      await supabase.from("credit_transactions").insert({
+        user_fid: fid,
+        amount: 1,
+        balance_after: freeGens,
+        type: "bonus",
+        description: `🎉 Milestone reward: ${newCount} videos generated! Free video awarded!`,
+      })
     }
 
     // Update user

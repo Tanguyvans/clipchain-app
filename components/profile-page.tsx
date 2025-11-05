@@ -3,6 +3,7 @@
 import { ChevronLeft, MoreVertical, CheckCircle2, Play, Gift } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { LoginStreakCard } from "./login-streak-card"
 
 interface VideoGridItem {
   id: string
@@ -44,9 +45,9 @@ export function ProfilePage({
   const [claiming, setClaiming] = useState(false)
   const [showRewardNotif, setShowRewardNotif] = useState(false)
 
-  // Calculate progress to next free generation (every 7 videos)
-  const progressToNext = currentStreak % 7
-  const remaining = 7 - progressToNext
+  // Calculate progress to next free generation (every 10 videos)
+  const progressToNext = currentStreak % 10
+  const remaining = 10 - progressToNext
 
   // Check if daily reward is available
   useEffect(() => {
@@ -207,22 +208,40 @@ export function ProfilePage({
         </div>
       )}
 
+      {/* Login Streak Card */}
+      <div className="px-6 pb-3">
+        <LoginStreakCard userFid={userFid} />
+      </div>
+
       {/* Generation Counter */}
       <div className="px-6 pb-3">
-        <div className="rounded-lg border border-gray-800 bg-[#1A1A1A] py-3 px-4">
+        <div className="rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-blue-500/10 py-3 px-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <span className="text-xl">🎬</span>
               <span className="text-sm font-semibold text-white">{currentStreak} videos generated</span>
             </div>
-            <div className="text-xs text-gray-400">{remaining} more for free gen</div>
+            <div className="text-xs text-purple-400">{remaining} more for free video</div>
           </div>
           {/* Progress bar */}
           <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300"
-              style={{ width: `${(progressToNext / 7) * 100}%` }}
+              className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
+              style={{ width: `${(progressToNext / 10) * 100}%` }}
             />
+          </div>
+          {/* Milestone Dots */}
+          <div className="flex justify-between mt-1 px-0.5">
+            {[...Array(10)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
+                  i < progressToNext
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 scale-125"
+                    : "bg-gray-700"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
