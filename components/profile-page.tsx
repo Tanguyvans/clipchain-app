@@ -121,77 +121,91 @@ export function ProfilePage({
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 overflow-y-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]"
-          aria-label="Go back"
-        >
-          <ChevronLeft className="h-5 w-5 text-white" />
-        </button>
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]"
-          aria-label="More options"
-        >
-          <MoreVertical className="h-5 w-5 text-white" />
-        </button>
-      </div>
-
-      {/* Profile Section - Ultra Compact */}
-      <div className="px-6 py-2 text-center">
-        <div className="relative mb-1.5 inline-block">
-          <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
-            <img
-              src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
-              alt={displayName || username}
-              className="h-full w-full rounded-full border-2 border-[#0A0A0A] object-cover"
-              onError={(e) => {
-                // Fallback to dicebear if avatar fails to load
-                e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
-              }}
-            />
-          </div>
+      {/* Header with gradient backdrop */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 via-transparent to-transparent h-48" />
+        <div className="relative flex items-center justify-between px-6 py-4">
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-black/60 hover:border-white/20 active:scale-95"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-5 w-5 text-white" />
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 transition-all hover:bg-black/60 hover:border-white/20 active:scale-95"
+            aria-label="More options"
+          >
+            <MoreVertical className="h-5 w-5 text-white" />
+          </button>
         </div>
 
-        <div className="mb-0.5 flex items-center justify-center gap-1.5">
-          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-base font-bold text-transparent">
-            {displayName || username}
-          </h1>
-          {verified && <CheckCircle2 className="h-3.5 w-3.5 fill-purple-500 text-white" />}
-        </div>
-        {displayName && username !== displayName && (
-          <p className="text-xs text-gray-500">@{username}</p>
-        )}
-      </div>
+        {/* Profile Section - Enhanced */}
+        <div className="relative px-6 py-2 text-center">
+          <div className="relative mb-2 inline-block">
+            {/* Avatar with animated gradient ring */}
+            <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 via-violet-500 to-blue-500 p-[3px] shadow-2xl shadow-purple-500/30 animate-pulse">
+              <img
+                src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
+                alt={displayName || username}
+                className="h-full w-full rounded-full border-2 border-[#0A0A0A] object-cover"
+                onError={(e) => {
+                  // Fallback to dicebear if avatar fails to load
+                  e.currentTarget.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`
+                }}
+              />
+            </div>
+          </div>
 
-      {/* Compact Stats - Single Row */}
-      <div className="px-6 pb-1.5">
-        <div className="flex items-center justify-center gap-4 rounded-lg border border-gray-800 bg-[#1A1A1A] py-1.5 px-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">🎬</span>
-            <span className="text-sm font-bold text-white">{videoCount}</span>
-            <span className="text-xs text-gray-400">Videos</span>
+          <div className="mb-1 flex items-center justify-center gap-1.5">
+            <h1 className="bg-gradient-to-r from-purple-400 via-violet-400 to-blue-400 bg-clip-text text-lg font-bold text-transparent">
+              {displayName || username}
+            </h1>
+            {verified && <CheckCircle2 className="h-4 w-4 fill-purple-500 text-white drop-shadow-lg" />}
           </div>
-          <div className="h-3 w-px bg-gray-700" />
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm">🔄</span>
-            <span className="text-sm font-bold text-white">{recastCount}</span>
-            <span className="text-xs text-gray-400">Recasts</span>
-          </div>
+          {displayName && username !== displayName && (
+            <p className="text-xs text-gray-400 font-medium">@{username}</p>
+          )}
         </div>
       </div>
 
-      {/* Daily Reward */}
+      {/* Enhanced Stats - Single Row */}
+      <div className="px-6 pb-2">
+        <div className="flex items-center justify-center gap-4 rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-500/5 via-violet-500/5 to-blue-500/5 py-2.5 px-4 backdrop-blur-sm shadow-lg">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/20">
+              <span className="text-base">🎬</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-white">{videoCount}</span>
+              <span className="text-xs text-gray-400">Videos</span>
+            </div>
+          </div>
+          <div className="h-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent" />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/20">
+              <span className="text-base">🔄</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-white">{recastCount}</span>
+              <span className="text-xs text-gray-400">Recasts</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Daily Reward - Enhanced */}
       {dailyRewardAvailable && (
-        <div className="px-6 pb-1.5">
+        <div className="px-6 pb-2">
           <button
             onClick={claimDailyReward}
             disabled={claiming}
-            className="w-full rounded-lg border border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20 py-2 px-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            className="w-full rounded-xl border border-green-500/40 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 py-3 px-4 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <div className="flex items-center justify-center gap-1.5">
-              <Gift className="h-4 w-4 text-green-400" />
-              <span className="text-xs font-semibold text-white">
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/30">
+                <Gift className="h-4 w-4 text-green-300" />
+              </div>
+              <span className="text-sm font-bold text-white">
                 {claiming ? "Claiming..." : "Claim Daily Reward (+1 Credit)"}
               </span>
             </div>
@@ -213,28 +227,36 @@ export function ProfilePage({
         <LoginStreakCard userFid={userFid} />
       </div>
 
-      {/* Generation Counter - Compact */}
-      <div className="px-6 pb-1.5">
-        <div className="rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-blue-500/10 py-2 px-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">🎬</span>
-              <span className="text-xs font-semibold text-white">{currentStreak} generated</span>
+      {/* Generation Counter - Enhanced */}
+      <div className="px-6 pb-2">
+        <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-violet-500/10 to-blue-500/10 p-4 shadow-lg backdrop-blur-sm">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-500/20">
+                <span className="text-lg">🎬</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-white">{currentStreak} generated</span>
+                <span className="text-xs text-gray-400">Keep creating!</span>
+              </div>
             </div>
-            <div className="text-xs text-purple-400">{remaining} more for free</div>
+            <div className="flex flex-col items-end">
+              <span className="text-xs font-semibold text-purple-400">{remaining} more</span>
+              <span className="text-xs text-gray-500">for free gen</span>
+            </div>
           </div>
-          {/* Progress bar */}
-          <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+          {/* Enhanced Progress bar */}
+          <div className="relative w-full h-2 bg-gray-800/50 rounded-full overflow-hidden border border-gray-700/50">
             <div
-              className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-purple-500 via-violet-500 to-blue-500 transition-all duration-500 ease-out shadow-lg shadow-purple-500/50"
               style={{ width: `${(progressToNext / 10) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-6 border-b border-gray-800 px-6 pb-2 pt-1">
+      {/* Tabs - Enhanced */}
+      <div className="flex gap-6 border-b border-gray-800/50 px-6 pb-2 pt-3">
         {[
           { label: "My Videos", key: "videos" as const },
           { label: "Liked", key: "liked" as const },
@@ -245,26 +267,29 @@ export function ProfilePage({
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`pb-2 text-sm font-semibold transition-colors ${
+              className={`relative pb-2 text-sm font-bold transition-all ${
                 isActive
-                  ? "border-b-2 border-orange-500 text-white"
+                  ? "text-white"
                   : "text-gray-400 hover:text-gray-300"
               }`}
             >
               {tab.label}
+              {isActive && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 shadow-lg shadow-orange-500/50" />
+              )}
             </button>
           )
         })}
       </div>
 
-      {/* Video Grid */}
+      {/* Video Grid - Enhanced */}
       {displayVideos.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2 px-6 pb-20 pt-3">
+        <div className="grid grid-cols-3 gap-2.5 px-6 pb-20 pt-4">
           {displayVideos.map((video, index) => (
             <div
               key={video.id}
               onClick={() => router.push(`/?videoId=${video.id}`)}
-              className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-lg"
+              className="group relative aspect-[9/16] cursor-pointer overflow-hidden rounded-xl border border-white/5 shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:border-white/10 active:scale-[0.98]"
             >
               <div className={`h-full w-full ${gradients[index % gradients.length]}`}>
                 {video.videoUrl ? (
@@ -283,31 +308,37 @@ export function ProfilePage({
                 ) : null}
               </div>
 
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                <Play className="h-8 w-8 text-white" fill="white" />
+              {/* Hover Overlay with blur */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm opacity-0 transition-all duration-200 group-hover:opacity-100">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
+                  <Play className="h-6 w-6 text-white ml-0.5" fill="white" />
+                </div>
               </div>
 
-              {/* View Count */}
-              <div className="absolute bottom-1 left-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white backdrop-blur-sm">
+              {/* View Count - Enhanced */}
+              <div className="absolute bottom-2 left-2 rounded-lg bg-black/70 backdrop-blur-md px-2 py-1 text-xs font-semibold text-white border border-white/10">
                 {(video.views || 0) >= 1000 ? `${((video.views || 0) / 1000).toFixed(1)}K` : video.views || 0}
               </div>
 
-              {/* Duration */}
-              <div className="absolute top-1 right-1 rounded bg-black/60 px-2 py-0.5 text-xs text-white backdrop-blur-sm">
+              {/* Duration - Enhanced */}
+              <div className="absolute top-2 right-2 rounded-lg bg-black/70 backdrop-blur-md px-2 py-1 text-xs font-semibold text-white border border-white/10">
                 {video.duration || "0:10"}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        // Empty State
+        // Empty State - Enhanced
         <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
-          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-800">
-            <Play className="h-10 w-10 text-gray-600" />
+          <div className="relative mb-6">
+            <div className="absolute inset-0 animate-pulse rounded-full bg-gradient-to-r from-purple-500 to-blue-500 blur-xl opacity-20" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 shadow-xl">
+              <Play className="h-12 w-12 text-gray-500" />
+            </div>
           </div>
-          <p className="mb-2 text-lg text-gray-400">No videos yet</p>
-          <button className="mt-4 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-3 font-semibold text-white shadow-lg shadow-orange-500/30 transition-all hover:scale-105">
+          <h3 className="mb-2 text-xl font-bold text-white">No videos yet</h3>
+          <p className="mb-6 text-sm text-gray-400 max-w-xs">Start creating amazing videos and build your collection!</p>
+          <button className="rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 px-8 py-3.5 font-bold text-white shadow-2xl shadow-orange-500/40 transition-all hover:scale-105 hover:shadow-orange-500/60 active:scale-95">
             Create your first video
           </button>
         </div>

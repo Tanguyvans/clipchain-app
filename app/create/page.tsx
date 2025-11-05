@@ -539,15 +539,16 @@ export default function CreatePage() {
               {officialTemplates.map((template) => {
                 const videoUrl = template.video_url
                 const emoji = template.emoji
-                const gradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
+                const baseGradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
+                const previewGradient = template.settings?.previewGradient || 'from-purple-600 via-violet-600 to-blue-600'
 
                 return (
                   <button
                     key={template.id}
                     onClick={() => handlePaymentAndGenerate(template.generation_type, template.id)}
-                    className="group relative rounded-xl overflow-hidden active:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
+                    className="group relative rounded-xl overflow-hidden active:opacity-90 transition-all hover:scale-[1.02] shadow-xl shadow-black/50 border border-white/5"
                   >
-                    {/* Video Thumbnail */}
+                    {/* Enhanced Preview */}
                     {videoUrl ? (
                       <div className="aspect-[3/4] relative bg-black">
                         <video
@@ -561,26 +562,44 @@ export default function CreatePage() {
                         <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                       </div>
                     ) : (
-                      <div className={`aspect-[3/4] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl group-hover:scale-110 transition-transform">{emoji}</span>}
+                      <div className={`aspect-[3/4] bg-gradient-to-br ${previewGradient} flex items-center justify-center relative overflow-hidden`}>
+                        {/* Animated background pattern */}
+                        <div className="absolute inset-0 opacity-20">
+                          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+                          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+                          <div className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+                        </div>
+                        {/* Emoji with enhanced styling */}
+                        <div className="relative z-10 flex flex-col items-center gap-2">
+                          <div className="text-7xl drop-shadow-2xl group-hover:scale-110 transition-transform duration-300">
+                            {emoji}
+                          </div>
+                          <div className="px-3 py-1 rounded-full bg-black/30 backdrop-blur-sm">
+                            <span className="text-xs font-semibold text-white/90">Try it now</span>
+                          </div>
+                        </div>
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent group-hover:from-black/30 transition-colors" />
                       </div>
                     )}
 
                     {/* Title Overlay (bottom) */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+                    <div className="absolute bottom-0 left-0 right-0 p-3.5 bg-gradient-to-t from-black via-black/90 to-transparent">
                       <h3 className="text-sm font-bold text-white leading-tight mb-1.5 line-clamp-2">
                         {template.name}
                       </h3>
-                      <p className="text-xs text-gray-300 flex items-center gap-1.5 mb-1">
+                      <p className="text-xs text-gray-300 flex items-center gap-1.5">
                         <Sparkles className="w-3 h-3 text-orange-400" />
-                        <span className="font-medium">{template.uses_count || 0} uses</span>
+                        <span className="font-medium">Official Template</span>
                       </p>
                     </div>
 
                     {/* Official Badge */}
-                    <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-orange-500/90 backdrop-blur-sm">
-                      <span className="text-xs font-bold text-white">Official</span>
+                    <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-lg shadow-orange-500/50">
+                      <span className="text-xs font-bold text-white flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Official
+                      </span>
                     </div>
                   </button>
                 )

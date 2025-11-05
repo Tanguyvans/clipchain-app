@@ -1,36 +1,43 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { DEFAULT_TEMPLATES } from "@/lib/default-templates"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
-
-// Template name mappings for official templates
-const TEMPLATE_NAMES: Record<string, { name: string; emoji: string; gradient: string }> = {
-  profile: {
-    name: "Make Your Profile Dance",
-    emoji: "💃",
-    gradient: "from-purple-500/10 to-blue-500/10"
-  },
-  bio: {
-    name: "Bio Speech Presentation",
-    emoji: "🎤",
-    gradient: "from-orange-500/10 to-pink-500/10"
-  },
-  text: {
-    name: "Custom Text Video",
-    emoji: "✨",
-    gradient: "from-green-500/10 to-teal-500/10"
-  },
-}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get("limit") || "20")
 
-    // Fetch ALL templates from database (official first, then by usage)
-    const { data: templates, error } = await supabase
+    // 1. Get static official templates (no database query needed!)
+    const officialTemplates = DEFAULT_TEMPLATES.map(template => ({
+      id: template.id,
+      creator_fid: 0,
+      video_url: null,
+      thumbnail_url: null,
+      generation_type: template.generationType,
+      prompt: template.prompt,
+      settings: {
+        ...template.settings,
+        previewGradient: template.previewGradient,
+        accentColor: template.accentColor,
+      },
+      cast_hash: null,
+      cast_url: null,
+      uses_count: 0,
+      is_featured: true,
+      is_official: true,
+      created_at: new Date().toISOString(),
+      creator: null,
+      name: template.name,
+      emoji: template.emoji,
+      gradient: template.gradient,
+    }))
+
+    // 2. Fetch ONLY user-created templates from database
+    const { data: userTemplatesData, error } = await supabase
       .from("video_templates")
       .select(`
         id,
@@ -48,89 +55,71 @@ export async function GET(request: NextRequest) {
         created_at
       `)
       .eq("is_public", true)
-      .order("is_official", { ascending: false })
+      .eq("is_official", false)
       .order("uses_count", { ascending: false })
       .order("created_at", { ascending: false })
       .limit(limit)
 
     if (error) {
-      console.error("Error fetching templates:", error)
+      console.error("Error fetching user templates:", error)
       return NextResponse.json(
         { success: false, error: "Failed to fetch templates" },
         { status: 500 }
       )
     }
 
-    // Fetch creator info for templates
-    const templatesWithCreators = await Promise.all(
-      (templates || []).map(async (template) => {
-        // Check if this is an official template
-        const isOfficial = template.is_official === true
-        const templateInfo = TEMPLATE_NAMES[template.generation_type]
-
-        // Fetch creator username from Neynar (skip for official templates)
-        if (!isOfficial) {
-          try {
-            const response = await fetch(
-              `https://api.neynar.com/v2/farcaster/user/bulk?fids=${template.creator_fid}`,
-              {
-                headers: {
-                  accept: "application/json",
-                  "x-api-key": process.env.NEYNAR_API_KEY || "",
-                },
-              }
-            )
-            const data = await response.json()
-            const creator = data.users?.[0]
-
-            return {
-              ...template,
-              creator: creator
-                ? {
-                    fid: creator.fid,
-                    username: creator.username,
-                    displayName: creator.display_name,
-                    pfpUrl: creator.pfp_url,
-                  }
-                : null,
-              // Add template info for display
-              name: templateInfo?.name,
-              emoji: templateInfo?.emoji,
-              gradient: templateInfo?.gradient,
+    // 3. Fetch creator info for user templates
+    const userTemplates = await Promise.all(
+      (userTemplatesData || []).map(async (template) => {
+        try {
+          const response = await fetch(
+            `https://api.neynar.com/v2/farcaster/user/bulk?fids=${template.creator_fid}`,
+            {
+              headers: {
+                accept: "application/json",
+                "x-api-key": process.env.NEYNAR_API_KEY || "",
+              },
             }
-          } catch (error) {
-            console.error("Error fetching creator:", error)
-            return {
-              ...template,
-              creator: null,
-              name: templateInfo?.name,
-              emoji: templateInfo?.emoji,
-              gradient: templateInfo?.gradient,
-            }
+          )
+          const data = await response.json()
+          const creator = data.users?.[0]
+
+          return {
+            ...template,
+            creator: creator
+              ? {
+                  fid: creator.fid,
+                  username: creator.username,
+                  displayName: creator.display_name,
+                  pfpUrl: creator.pfp_url,
+                }
+              : null,
+            name: template.cast_hash ? "Community Template" : "Template",
+            emoji: "✨",
+            gradient: "from-purple-500/10 to-blue-500/10",
           }
-        } else {
-          // Official template (FID 0)
+        } catch (error) {
+          console.error("Error fetching creator:", error)
           return {
             ...template,
             creator: null,
-            name: templateInfo?.name || "Official Template",
-            emoji: templateInfo?.emoji || "✨",
-            gradient: templateInfo?.gradient || "from-purple-500/10 to-blue-500/10",
+            name: "Community Template",
+            emoji: "✨",
+            gradient: "from-purple-500/10 to-blue-500/10",
           }
         }
       })
     )
 
-    // Separate official templates from user templates
-    const officialTemplates = templatesWithCreators.filter(t => t.is_official === true)
-    const userTemplates = templatesWithCreators.filter(t => t.is_official !== true)
+    // Combine all templates
+    const allTemplates = [...officialTemplates, ...userTemplates]
 
     return NextResponse.json({
       success: true,
-      templates: templatesWithCreators, // All templates combined
+      templates: allTemplates,
       officialTemplates,
       userTemplates,
-      count: templatesWithCreators.length,
+      count: allTemplates.length,
     })
   } catch (error) {
     console.error("Error in /api/templates/trending:", error)
