@@ -122,7 +122,7 @@ export function ProfilePage({
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24 overflow-y-auto">
       {/* Header */}
-      <div className="flex items-center justify-between p-6">
+      <div className="flex items-center justify-between px-6 py-4">
         <button
           className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1A1A1A] transition-colors hover:bg-[#2A2A2A]"
           aria-label="Go back"
@@ -137,10 +137,10 @@ export function ProfilePage({
         </button>
       </div>
 
-      {/* Profile Section - Compact */}
-      <div className="px-6 py-3 text-center">
-        <div className="relative mb-2 inline-block">
-          <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
+      {/* Profile Section - Ultra Compact */}
+      <div className="px-6 py-2 text-center">
+        <div className="relative mb-1.5 inline-block">
+          <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 p-1">
             <img
               src={avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`}
               alt={displayName || username}
@@ -154,10 +154,10 @@ export function ProfilePage({
         </div>
 
         <div className="mb-0.5 flex items-center justify-center gap-1.5">
-          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-lg font-bold text-transparent">
+          <h1 className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-base font-bold text-transparent">
             {displayName || username}
           </h1>
-          {verified && <CheckCircle2 className="h-4 w-4 fill-purple-500 text-white" />}
+          {verified && <CheckCircle2 className="h-3.5 w-3.5 fill-purple-500 text-white" />}
         </div>
         {displayName && username !== displayName && (
           <p className="text-xs text-gray-500">@{username}</p>
@@ -165,16 +165,16 @@ export function ProfilePage({
       </div>
 
       {/* Compact Stats - Single Row */}
-      <div className="px-6 pb-2">
-        <div className="flex items-center justify-center gap-6 rounded-lg border border-gray-800 bg-[#1A1A1A] py-2 px-4">
+      <div className="px-6 pb-1.5">
+        <div className="flex items-center justify-center gap-4 rounded-lg border border-gray-800 bg-[#1A1A1A] py-1.5 px-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-base">🎬</span>
+            <span className="text-sm">🎬</span>
             <span className="text-sm font-bold text-white">{videoCount}</span>
             <span className="text-xs text-gray-400">Videos</span>
           </div>
-          <div className="h-4 w-px bg-gray-700" />
+          <div className="h-3 w-px bg-gray-700" />
           <div className="flex items-center gap-1.5">
-            <span className="text-base">🔄</span>
+            <span className="text-sm">🔄</span>
             <span className="text-sm font-bold text-white">{recastCount}</span>
             <span className="text-xs text-gray-400">Recasts</span>
           </div>
@@ -183,15 +183,15 @@ export function ProfilePage({
 
       {/* Daily Reward */}
       {dailyRewardAvailable && (
-        <div className="px-6 pb-2">
+        <div className="px-6 pb-1.5">
           <button
             onClick={claimDailyReward}
             disabled={claiming}
-            className="w-full rounded-lg border border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20 py-3 px-4 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            className="w-full rounded-lg border border-green-500/30 bg-gradient-to-r from-green-500/20 to-emerald-500/20 py-2 px-3 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
           >
-            <div className="flex items-center justify-center gap-2">
-              <Gift className="h-5 w-5 text-green-400" />
-              <span className="text-sm font-semibold text-white">
+            <div className="flex items-center justify-center gap-1.5">
+              <Gift className="h-4 w-4 text-green-400" />
+              <span className="text-xs font-semibold text-white">
                 {claiming ? "Claiming..." : "Claim Daily Reward (+1 Credit)"}
               </span>
             </div>
@@ -209,19 +209,19 @@ export function ProfilePage({
       )}
 
       {/* Login Streak Card */}
-      <div className="px-6 pb-3">
+      <div className="px-6 pb-1.5">
         <LoginStreakCard userFid={userFid} />
       </div>
 
-      {/* Generation Counter */}
-      <div className="px-6 pb-3">
-        <div className="rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-blue-500/10 py-3 px-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🎬</span>
-              <span className="text-sm font-semibold text-white">{currentStreak} videos generated</span>
+      {/* Generation Counter - Compact */}
+      <div className="px-6 pb-1.5">
+        <div className="rounded-lg border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-blue-500/10 py-2 px-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-base">🎬</span>
+              <span className="text-xs font-semibold text-white">{currentStreak} generated</span>
             </div>
-            <div className="text-xs text-purple-400">{remaining} more for free video</div>
+            <div className="text-xs text-purple-400">{remaining} more for free</div>
           </div>
           {/* Progress bar */}
           <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
@@ -230,24 +230,11 @@ export function ProfilePage({
               style={{ width: `${(progressToNext / 10) * 100}%` }}
             />
           </div>
-          {/* Milestone Dots */}
-          <div className="flex justify-between mt-1 px-0.5">
-            {[...Array(10)].map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ${
-                  i < progressToNext
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 scale-125"
-                    : "bg-gray-700"
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-gray-800 px-6 pb-4">
+      <div className="flex gap-6 border-b border-gray-800 px-6 pb-2 pt-1">
         {[
           { label: "My Videos", key: "videos" as const },
           { label: "Liked", key: "liked" as const },
@@ -258,7 +245,7 @@ export function ProfilePage({
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`pb-3 text-sm font-semibold transition-colors ${
+              className={`pb-2 text-sm font-semibold transition-colors ${
                 isActive
                   ? "border-b-2 border-orange-500 text-white"
                   : "text-gray-400 hover:text-gray-300"
@@ -272,7 +259,7 @@ export function ProfilePage({
 
       {/* Video Grid */}
       {displayVideos.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2 px-6 pb-20 pt-6">
+        <div className="grid grid-cols-3 gap-2 px-6 pb-20 pt-3">
           {displayVideos.map((video, index) => (
             <div
               key={video.id}
