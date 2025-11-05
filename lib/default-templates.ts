@@ -35,10 +35,10 @@ export const DEFAULT_TEMPLATES: Template[] = [
   {
     id: 'default-bio-speech',
     name: 'Bio Speech Presentation',
-    description: 'Watch a professional presenter give a speech about your bio with engaging body language and gestures',
+    description: 'Dynamic multi-shot video presentation of your bio with professional camera angles, engaging close-ups, and cinematic transitions',
     emoji: '🎤',
     generationType: 'bio',
-    prompt: 'Create a professional speech presentation about this bio',
+    prompt: 'Create a dynamic multi-shot professional presentation about this bio with cinematic camera transitions',
     gradient: 'from-orange-500/10 to-pink-500/10',
     borderColor: 'border-orange-500/30',
     iconBg: 'bg-orange-500/20',

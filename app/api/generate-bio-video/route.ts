@@ -56,8 +56,15 @@ export async function POST(request: NextRequest) {
     // Create a short summary of the bio (first 100 chars or full bio if shorter)
     const bioSummary = bio.length > 100 ? bio.substring(0, 100) + "..." : bio;
 
-    // Create a presentation-style prompt where the person in the image is giving a speech
-    const speechPrompt = `The person in this image is a professional presenter ${displayName ? `named ${displayName}` : ""} giving a confident speech presentation. They are explaining: "${bioSummary}". Professional setting with excellent lighting, engaging body language, animated gesturing while speaking to the audience, expressive facial expressions, dynamic movement, cinematic camera angle, professional video production quality, 8 seconds of compelling presentation.`;
+    // Create a dynamic multi-shot presentation prompt with [cut] transitions
+    const speechPrompt = `Professional presenter ${displayName ? `${displayName}` : ""}  standing confidently, looking directly at camera with engaging smile, professional lighting
+
+[cut] Medium shot from the side - presenter gesturing enthusiastically while explaining "${bioSummary}", animated hand movements, expressive body language
+
+[cut] Close up shot of presenter's face with genuine smile and warm expression, making direct eye contact with audience, professional and welcoming
+
+[cut] Wide angle shot showing presenter's final confident gesture, arms open in welcoming pose, cinematic professional setting, excellent production quality`;
+
 
     console.log("🎨 Speech presentation prompt:", speechPrompt);
 

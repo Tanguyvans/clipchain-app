@@ -489,13 +489,15 @@ export default function CreatePage() {
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-20 border-b border-gray-800 bg-[#0A0A0A]/95 p-4 backdrop-blur-xl">
+      <div className="sticky top-0 z-20 border-b border-gray-800 bg-[#0A0A0A]/95 p-4 backdrop-blur-xl shadow-lg">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-orange-500" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500/20 to-pink-500/20 border border-orange-500/30">
+              <Sparkles className="h-5 w-5 text-orange-400" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Templates</h1>
-              <p className="text-sm text-gray-400">Choose a style to generate</p>
+              <h1 className="text-xl font-bold text-white">Create Video</h1>
+              <p className="text-xs text-gray-400">Choose a template or create your own</p>
             </div>
           </div>
           <button
@@ -525,11 +527,15 @@ export default function CreatePage() {
       <div className="pb-32">
         {/* Official Templates Section */}
         {!templatesLoading && officialTemplates.length > 0 && (
-          <div className="mb-6">
-            <div className="px-4 py-3 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-b border-orange-500/20">
-              <h2 className="text-sm font-bold text-orange-400">✨ Official Templates</h2>
+          <div className="mb-8">
+            <div className="px-4 py-4 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-b border-orange-500/20">
+              <h2 className="text-base font-bold text-orange-400 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Official Templates
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">Professional templates crafted by ClipChain</p>
             </div>
-            <div className="p-2 grid grid-cols-2 gap-2">
+            <div className="p-3 grid grid-cols-2 gap-3">
               {officialTemplates.map((template) => {
                 const videoUrl = template.video_url
                 const emoji = template.emoji
@@ -539,37 +545,42 @@ export default function CreatePage() {
                   <button
                     key={template.id}
                     onClick={() => handlePaymentAndGenerate(template.generation_type, template.id)}
-                    className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
+                    className="group relative rounded-xl overflow-hidden active:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
                   >
                     {/* Video Thumbnail */}
                     {videoUrl ? (
                       <div className="aspect-[3/4] relative bg-black">
                         <video
                           src={videoUrl}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           muted
                           loop
                           playsInline
                           preload="metadata"
                         />
-                        <div className="absolute inset-0 bg-black/10" />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                       </div>
                     ) : (
                       <div className={`aspect-[3/4] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
-                        <div className="absolute inset-0 bg-black/20" />
-                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl">{emoji}</span>}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl group-hover:scale-110 transition-transform">{emoji}</span>}
                       </div>
                     )}
 
                     {/* Title Overlay (bottom) */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                      <h3 className="text-sm font-semibold text-white leading-tight mb-1 line-clamp-2">
+                    <div className="absolute bottom-0 left-0 right-0 p-3.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+                      <h3 className="text-sm font-bold text-white leading-tight mb-1.5 line-clamp-2">
                         {template.name}
                       </h3>
-                      <p className="text-xs text-gray-300 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        <span>{template.uses_count || 0} uses</span>
+                      <p className="text-xs text-gray-300 flex items-center gap-1.5 mb-1">
+                        <Sparkles className="w-3 h-3 text-orange-400" />
+                        <span className="font-medium">{template.uses_count || 0} uses</span>
                       </p>
+                    </div>
+
+                    {/* Official Badge */}
+                    <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-orange-500/90 backdrop-blur-sm">
+                      <span className="text-xs font-bold text-white">Official</span>
                     </div>
                   </button>
                 )
@@ -581,50 +592,68 @@ export default function CreatePage() {
         {/* User Templates Section */}
         {!templatesLoading && userTemplates.length > 0 && (
           <div>
-            <div className="px-4 py-3 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-b border-purple-500/20">
-              <h2 className="text-sm font-bold text-purple-400">🌟 Community Templates</h2>
+            <div className="px-4 py-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-b border-purple-500/20">
+              <h2 className="text-base font-bold text-purple-400 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Community Templates
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">Created by the ClipChain community</p>
             </div>
-            <div className="p-2 grid grid-cols-2 gap-2">
+            <div className="p-3 grid grid-cols-2 gap-3">
               {userTemplates.map((template) => {
-                const displayName = `${template.name || 'Template'} by @${template.creator?.username || 'user'}`
+                const displayName = template.name || 'Template'
+                const creatorName = template.creator?.username || 'user'
                 const videoUrl = template.video_url
                 const emoji = template.emoji
                 const gradient = template.gradient || 'from-purple-500/10 to-blue-500/10'
+                const pfpUrl = template.creator?.pfpUrl
 
                 return (
                   <button
                     key={template.id}
                     onClick={() => handlePaymentAndGenerate(template.generation_type, template.id)}
-                    className="group relative rounded-lg overflow-hidden active:opacity-90 transition-opacity"
+                    className="group relative rounded-xl overflow-hidden active:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
                   >
                     {/* Video Thumbnail */}
                     {videoUrl ? (
                       <div className="aspect-[3/4] relative bg-black">
                         <video
                           src={videoUrl}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
                           muted
                           loop
                           playsInline
                           preload="metadata"
                         />
-                        <div className="absolute inset-0 bg-black/10" />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-colors" />
                       </div>
                     ) : (
                       <div className={`aspect-[3/4] bg-gradient-to-br ${gradient} flex items-center justify-center relative`}>
-                        <div className="absolute inset-0 bg-black/20" />
-                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl">{emoji}</span>}
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+                        {emoji && <span className="text-7xl z-10 drop-shadow-2xl group-hover:scale-110 transition-transform">{emoji}</span>}
                       </div>
                     )}
 
                     {/* Title Overlay (bottom) */}
-                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                      <h3 className="text-sm font-semibold text-white leading-tight mb-1 line-clamp-2">
+                    <div className="absolute bottom-0 left-0 right-0 p-3.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+                      <h3 className="text-sm font-bold text-white leading-tight mb-1.5 line-clamp-2">
                         {displayName}
                       </h3>
-                      <p className="text-xs text-gray-300 flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        <span>{template.uses_count || 0} uses</span>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {pfpUrl && (
+                          <img
+                            src={pfpUrl}
+                            alt={creatorName}
+                            className="w-4 h-4 rounded-full border border-white/20"
+                          />
+                        )}
+                        <p className="text-xs text-gray-300 truncate">
+                          @{creatorName}
+                        </p>
+                      </div>
+                      <p className="text-xs text-gray-400 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <span className="font-medium">{template.uses_count || 0} uses</span>
                       </p>
                     </div>
                   </button>
@@ -636,18 +665,42 @@ export default function CreatePage() {
 
         {/* Loading State */}
         {templatesLoading && (
-          <div className="p-2 grid grid-cols-2 gap-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-gray-900 rounded-lg animate-pulse" />
-            ))}
+          <div className="p-3 space-y-6">
+            {/* Official Templates Skeleton */}
+            <div>
+              <div className="px-4 py-4 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-b border-orange-500/20 mb-3">
+                <div className="h-4 w-32 bg-orange-500/20 rounded animate-pulse mb-2" />
+                <div className="h-3 w-48 bg-gray-800 rounded animate-pulse" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-900 rounded-xl animate-pulse shadow-lg" />
+                ))}
+              </div>
+            </div>
+            {/* Community Templates Skeleton */}
+            <div>
+              <div className="px-4 py-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-b border-purple-500/20 mb-3">
+                <div className="h-4 w-36 bg-purple-500/20 rounded animate-pulse mb-2" />
+                <div className="h-3 w-52 bg-gray-800 rounded animate-pulse" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="aspect-[3/4] bg-gray-900 rounded-xl animate-pulse shadow-lg" />
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* No Templates State */}
         {!templatesLoading && templates.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">No templates available yet</p>
-            <p className="text-gray-500 text-xs mt-1">Generate and share videos to create templates!</p>
+          <div className="text-center py-16 px-6">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-gray-500" />
+            </div>
+            <p className="text-gray-300 text-base font-semibold mb-1">No templates yet</p>
+            <p className="text-gray-500 text-sm">Generate and share videos to create templates!</p>
           </div>
         )}
       </div>
@@ -655,9 +708,9 @@ export default function CreatePage() {
       {/* Floating Create Custom Button */}
       <button
         onClick={() => setShowTemplates(true)}
-        className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 shadow-xl shadow-orange-500/40 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+        className="fixed bottom-24 right-6 z-30 w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 shadow-2xl shadow-orange-500/50 flex items-center justify-center hover:scale-110 hover:shadow-orange-500/60 transition-all active:scale-95"
       >
-        <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+        <Plus className="w-8 h-8 text-white" strokeWidth={3} />
       </button>
 
       {/* Template Browser Modal - Coming Soon */}
