@@ -19,26 +19,26 @@ export const DEFAULT_TEMPLATES: Template[] = [
   {
     id: 'default-profile-dance',
     name: 'Make Your Profile Dance',
-    description: 'Watch your profile picture come alive with fun dancing moves and energetic animation',
+    description: 'Dynamic multi-shot dance video with cinematic camera angles, energetic moves, and smooth transitions from pose to groove to finish',
     emoji: '💃',
     generationType: 'profile',
-    prompt: 'Animate this profile picture with subtle, natural movement',
+    prompt: 'Create a dynamic multi-shot dance animation with cinematic camera transitions and energetic movements',
     gradient: 'from-purple-500/10 to-blue-500/10',
     borderColor: 'border-purple-500/30',
     iconBg: 'bg-purple-500/20',
     iconColor: 'text-purple-400',
     settings: {
-      duration: 5,
+      duration: 8,
       style: 'dance'
     }
   },
   {
     id: 'default-bio-speech',
     name: 'Bio Speech Presentation',
-    description: 'Watch a professional presenter give a speech about your bio with engaging body language and gestures',
+    description: 'Dynamic multi-shot video presentation of your bio with professional camera angles, engaging close-ups, and cinematic transitions',
     emoji: '🎤',
     generationType: 'bio',
-    prompt: 'Create a professional speech presentation about this bio',
+    prompt: 'Create a dynamic multi-shot professional presentation about this bio with cinematic camera transitions',
     gradient: 'from-orange-500/10 to-pink-500/10',
     borderColor: 'border-orange-500/30',
     iconBg: 'bg-orange-500/20',
