@@ -19,16 +19,16 @@ export const DEFAULT_TEMPLATES: Template[] = [
   {
     id: 'default-profile-dance',
     name: 'Make Your Profile Dance',
-    description: 'Watch your profile picture come alive with fun dancing moves and energetic animation',
+    description: 'Dynamic multi-shot dance video with cinematic camera angles, energetic moves, and smooth transitions from pose to groove to finish',
     emoji: '💃',
     generationType: 'profile',
-    prompt: 'Animate this profile picture with subtle, natural movement',
+    prompt: 'Create a dynamic multi-shot dance animation with cinematic camera transitions and energetic movements',
     gradient: 'from-purple-500/10 to-blue-500/10',
     borderColor: 'border-purple-500/30',
     iconBg: 'bg-purple-500/20',
     iconColor: 'text-purple-400',
     settings: {
-      duration: 5,
+      duration: 8,
       style: 'dance'
     }
   },

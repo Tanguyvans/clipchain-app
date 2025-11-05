@@ -50,8 +50,16 @@ export async function POST(request: NextRequest) {
     // Generate video using Fal AI Sora 2 image-to-video
     console.log("🚀 Starting Fal AI image-to-video generation...");
 
-    // Fun dancing animation prompt
-    const funPrompt = prompt || "The person in the image is dancing energetically with smooth moves, grooving to music, having fun, dynamic movement, professional cinematography";
+    // Dynamic multi-shot dancing animation prompt with cinematic cuts
+    const funPrompt = prompt || `The figure in this image starts with a confident pose, slight head bob to the rhythm, smooth and natural
+
+[cut] Medium shot from the side - figure grooving with energetic dance moves, shoulders moving, body swaying rhythmically to music, fluid motion
+
+[cut] Close up of upper body - figure dancing with expressive movements, head tilting, arms flowing with the beat, joyful energy
+
+[cut] Wide angle full body shot - figure hitting a final dance pose with flair, arms extended, dynamic finish, professional cinematography, vibrant energy`;
+
+    console.log("🎨 Dynamic dance prompt:", funPrompt);
 
     const result = await fal.subscribe("fal-ai/sora-2/image-to-video", {
       input: {
